@@ -1,0 +1,83 @@
+name: Build, Push, and Deploy Laravel to Cloud Run
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 🧾 Checkout source code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # # 🛠️ Set up PHP
+      # - name: Create Laravel GCS Key File from Secret
+      #   run: |
+      #     mkdir -p storage/app/keys
+          
+      #     echo '${{ secrets.GCP_SA_KEY_WEB }}' > storage/app/keys/courtplay-gcs-key.json
+
+      # 🧩 Create GCP credentials file
+      - name: Create GCP credentials file
+        run: |
+          echo '${{ secrets.GCP_SA_KEY }}' > $HOME/gcp-key.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcp-key.json" >> $GITHUB_ENV
+
+      # ☁️ Setup Google Cloud SDK
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+
+      # 🐳 Configure Docker for Artifact Registry
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+          gcloud auth configure-docker asia-southeast1-docker.pkg.dev --quiet
+
+      # 🧱 Build Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/tracker-expenses/tracker-expenses-web:latest .
+
+      # 📦 Push Docker image
+      - name: Push Docker image
+        run: |
+          docker push asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/tracker-expenses/tracker-expenses-web:latest
+
+      # 🔐 Create .env.production file from GitHub Secret
+      - name: Create .env.production file
+        run: |
+          echo "${{ secrets.ENV_PRODUCTION_FILE }}" > .env.production
+
+      # 🚀 Deploy to Cloud Run (CPU)
+      - name: Deploy to Cloud Run (CPU)
+        run: |
+          # Convert .env.production (KEY=VALUE) → gcloud format KEY=VALUE,KEY2=VALUE2
+          ENV_VARS=$(grep -v '^#' .env.production | grep '=' | sed '/^$/d' | tr '\n' ',' | sed 's/,$//')
+          gcloud run deploy tracker-expenses-web \
+            --image=asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/tracker-expenses/tracker-expenses-web:latest \
+            --region=asia-southeast1 \
+            --platform=managed \
+            --service-account=github-runner-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
+            --allow-unauthenticated \
+            --port=8080 \
+            --cpu=2 \
+            --memory=2Gi \
+            --use-http2 \
+            --async \
+            --cpu-boost \
+            --set-env-vars="$ENV_VARS"
+
+      # 🚦Update Lalu Lintas ke Revisi Terbaru
+      - name: Route Traffic to Latest Revision
+        run: |
+          gcloud run services update-traffic tracker-expenses-web \
+            --to-latest \
+            --region=asia-southeast1
