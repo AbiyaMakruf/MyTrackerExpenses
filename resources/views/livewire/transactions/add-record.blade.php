@@ -51,12 +51,12 @@
                 <div class="grid gap-3 md:grid-cols-2">
                     <div>
                         <label class="text-xs text-slate-500">Amount</label>
-                        <input type="number" step="0.01" wire:model.live="transfer_amount" class="w-full rounded-2xl border border-[#D2F9E7] bg-white px-4 py-2" placeholder="0.00" />
+                        <input type="text" inputmode="decimal" data-money-input wire:model.live="transfer_amount" class="w-full rounded-2xl border border-[#D2F9E7] bg-white px-4 py-2" placeholder="0.00" />
                         @error('transfer_amount') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="text-xs text-slate-500">Date & time</label>
-                        <input type="datetime-local" wire:model.live="transfer_date" class="w-full rounded-2xl border border-[#D2F9E7] bg-white px-4 py-2" />
+                        <input type="text" data-datetimepicker wire:model.live="transfer_date" readonly class="w-full cursor-pointer rounded-2xl border border-[#D2F9E7] bg-white px-4 py-2" />
                         @error('transfer_date') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                 </div>
@@ -73,7 +73,7 @@
                 <div class="grid gap-3 md:grid-cols-2">
                     <div>
                         <label class="text-xs text-slate-500">Amount</label>
-                        <input type="number" step="0.01" wire:model.live="amount" class="w-full rounded-2xl border border-[#D2F9E7] bg-white px-4 py-2 text-xl font-semibold text-[#095C4A]" placeholder="0.00" />
+                        <input type="text" inputmode="decimal" data-money-input wire:model.live="amount" class="w-full rounded-2xl border border-[#D2F9E7] bg-white px-4 py-2 text-xl font-semibold text-[#095C4A]" placeholder="0.00" />
                         @error('amount') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                     <div>
@@ -112,7 +112,7 @@
                 <div class="grid gap-3 md:grid-cols-2">
                     <div>
                         <label class="text-xs text-slate-500">Date & time</label>
-                        <input type="datetime-local" wire:model.live="transaction_date" class="w-full rounded-2xl border border-[#D2F9E7] bg-white px-4 py-2" />
+                        <input type="text" data-datetimepicker wire:model.live="transaction_date" readonly class="w-full cursor-pointer rounded-2xl border border-[#D2F9E7] bg-white px-4 py-2" />
                         @error('transaction_date') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                     <div>
@@ -194,7 +194,7 @@
                         @endif
                         <div>
                             <label class="text-xs text-slate-500">End date (optional)</label>
-                            <input type="date" wire:model.live="recurring_end_date" class="w-full rounded-2xl border border-[#D2F9E7] bg-white px-4 py-2" />
+                            <input type="text" data-datepicker wire:model.live="recurring_end_date" readonly class="w-full cursor-pointer rounded-2xl border border-[#D2F9E7] bg-white px-4 py-2" />
                             @error('recurring_end_date') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
                         </div>
                     @endif

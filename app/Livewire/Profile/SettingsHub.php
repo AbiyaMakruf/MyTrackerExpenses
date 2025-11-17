@@ -7,6 +7,7 @@ use App\Models\CategoryIcon;
 use App\Models\Label;
 use App\Models\Transaction;
 use App\Models\Wallet;
+use App\Models\WalletIcon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -33,12 +34,20 @@ class SettingsHub extends Component
         'currency' => null,
         'initial_balance' => null,
         'is_default' => false,
+        'wallet_icon_id' => null,
+        'icon_color' => '#095C4A',
+        'icon_background' => '#D2F9E7',
     ];
 
     public array $labelForm = [
         'name' => '',
-        'color' => '#15B489',
+        'color' => '',
     ];
+
+    public array $labelPalette = [];
+
+    public bool $showWalletIconPicker = false;
+    public bool $showCategoryIconPicker = false;
 
     public array $categoryForm = [
         'name' => '',
@@ -72,6 +81,15 @@ class SettingsHub extends Component
         ];
 
         $this->walletForm['currency'] = $user->base_currency;
+
+        $this->labelPalette = [
+            '#095C4A', '#08745C', '#15B489', '#72E3BD', '#0F172A',
+            '#1D4ED8', '#2563EB', '#38BDF8', '#F97316', '#EA580C',
+            '#DC2626', '#F43F5E', '#EC4899', '#A855F7', '#6366F1',
+            '#14B8A6', '#0EA5E9', '#22C55E', '#84CC16', '#FACC15',
+        ];
+
+        $this->labelForm['color'] = $this->labelPalette[0];
     }
 
     public function saveProfile(): void
@@ -116,6 +134,9 @@ class SettingsHub extends Component
             'walletForm.currency' => ['required', Rule::in(config('myexpenses.currency.supported'))],
             'walletForm.initial_balance' => ['required', 'numeric', 'min:0'],
             'walletForm.is_default' => ['boolean'],
+            'walletForm.wallet_icon_id' => ['nullable', Rule::exists('wallet_icons', 'id')],
+            'walletForm.icon_color' => ['nullable', 'string'],
+            'walletForm.icon_background' => ['nullable', 'string'],
         ])['walletForm'];
 
         $wallet = Wallet::create([
@@ -134,6 +155,9 @@ class SettingsHub extends Component
             'currency' => Auth::user()->base_currency,
             'initial_balance' => null,
             'is_default' => false,
+            'wallet_icon_id' => null,
+            'icon_color' => '#095C4A',
+            'icon_background' => '#D2F9E7',
         ];
 
         session()->flash('profile_status', 'Wallet added');
@@ -149,7 +173,7 @@ class SettingsHub extends Component
     {
         $data = $this->validate([
             'labelForm.name' => ['required', 'string', 'max:100'],
-            'labelForm.color' => ['nullable', 'string'],
+            'labelForm.color' => ['required', 'string', Rule::in($this->labelPalette)],
         ])['labelForm'];
 
         Label::create([
@@ -158,7 +182,7 @@ class SettingsHub extends Component
             'slug' => Str::slug($data['name']),
         ]);
 
-        $this->labelForm = ['name' => '', 'color' => '#15B489'];
+        $this->labelForm = ['name' => '', 'color' => $this->labelPalette[0]];
         session()->flash('profile_status', 'Label saved');
     }
 
@@ -166,6 +190,38 @@ class SettingsHub extends Component
     {
         Label::where('user_id', Auth::id())->where('id', $labelId)->delete();
         session()->flash('profile_status', 'Label removed');
+    }
+
+    public function openWalletIconPicker(): void
+    {
+        $this->showWalletIconPicker = true;
+    }
+
+    public function closeWalletIconPicker(): void
+    {
+        $this->showWalletIconPicker = false;
+    }
+
+    public function selectWalletIcon(?int $iconId): void
+    {
+        $this->walletForm['wallet_icon_id'] = $iconId;
+        $this->showWalletIconPicker = false;
+    }
+
+    public function openCategoryIconPicker(): void
+    {
+        $this->showCategoryIconPicker = true;
+    }
+
+    public function closeCategoryIconPicker(): void
+    {
+        $this->showCategoryIconPicker = false;
+    }
+
+    public function selectCategoryIcon(?int $iconId): void
+    {
+        $this->categoryForm['category_icon_id'] = $iconId;
+        $this->showCategoryIconPicker = false;
     }
 
     public function saveCategory(): void
@@ -268,6 +324,7 @@ class SettingsHub extends Component
                 ->orderBy('display_order')
                 ->get(),
             'categoryIcons' => CategoryIcon::where('is_active', true)->orderBy('name')->get(),
+            'walletIcons' => WalletIcon::orderBy('name')->get(),
             'timezones' => \DateTimeZone::listIdentifiers(),
         ]);
     }

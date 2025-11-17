@@ -18,6 +18,7 @@ class Subscription extends Model
         'next_billing_date',
         'wallet_id',
         'category_id',
+        'sub_category_id',
         'status',
         'auto_post_transaction',
         'reminder_days',
@@ -49,5 +50,10 @@ class Subscription extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function subCategory()
+    {
+        return $this->belongsTo(Category::class, 'sub_category_id');
     }
 }

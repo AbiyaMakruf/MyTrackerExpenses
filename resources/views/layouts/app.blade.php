@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @include('partials.head', ['title' => ($title ?? config('app.name')) . ' | ' . config('app.tagline')])
     </head>
@@ -9,10 +9,8 @@
                 <div class="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 md:px-8">
                     <div class="flex items-center gap-3">
                         <a href="{{ route('dashboard') }}" class="flex items-center gap-2" wire:navigate>
-                            <x-app-logo class="h-10 w-10" />
                             <div>
                                 <p class="text-base font-semibold text-[#095C4A]">{{ config('app.name') }}</p>
-                                <p class="text-xs text-slate-500">{{ config('app.tagline') }}</p>
                             </div>
                         </a>
                     </div>
@@ -32,6 +30,11 @@
                             'bg-[#095C4A] text-white' => request()->routeIs('statistics'),
                             'text-slate-600 hover:bg-[#D2F9E7] hover:text-[#095C4A]' => ! request()->routeIs('statistics'),
                         ])>Statistics</a>
+                        <a href="{{ route('transactions.index') }}" wire:navigate @class([
+                            'rounded-full px-4 py-2 transition',
+                            'bg-[#095C4A] text-white' => request()->routeIs('transactions.index'),
+                            'text-slate-600 hover:bg-[#D2F9E7] hover:text-[#095C4A]' => ! request()->routeIs('transactions.index'),
+                        ])>Transactions</a>
                         <a href="{{ route('profile.settings') }}" wire:navigate @class([
                             'rounded-full px-4 py-2 transition',
                             'bg-[#095C4A] text-white' => request()->routeIs('profile.settings'),
@@ -39,10 +42,6 @@
                         ])>Profile</a>
                     </nav>
                     <div class="flex items-center gap-3">
-                        <div class="hidden text-right text-sm md:block">
-                            <p class="font-semibold">{{ auth()->user()->name }}</p>
-                            <p class="text-xs text-slate-500">{{ auth()->user()->email }}</p>
-                        </div>
                         <flux:dropdown align="end">
                             <flux:profile
                                 :name="auth()->user()->name"
@@ -71,11 +70,12 @@
             </main>
 
             <nav class="fixed inset-x-0 bottom-0 z-40 mx-auto mb-2 max-w-3xl rounded-t-3xl border border-green-100 bg-white/90 px-6 py-3 shadow-2xl shadow-[#095C4A]/30 backdrop-blur md:hidden">
-                <div class="grid grid-cols-4 gap-2 text-xs font-medium text-slate-600">
+                <div class="grid grid-cols-5 gap-2 text-xs font-medium text-slate-600">
                     @php($navItems = [
                         ['route' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home'],
                         ['route' => 'planning', 'label' => 'Planning', 'icon' => 'calendar-days'],
                         ['route' => 'statistics', 'label' => 'Statistics', 'icon' => 'chart-pie'],
+                        ['route' => 'transactions.index', 'label' => 'Transactions', 'icon' => 'clipboard-document-list'],
                         ['route' => 'profile.settings', 'label' => 'Profile', 'icon' => 'user-circle'],
                     ])
                     @foreach ($navItems as $item)

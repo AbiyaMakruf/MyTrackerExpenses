@@ -69,11 +69,11 @@
         @if ($range === 'custom')
             <div>
                 <label class="text-xs text-slate-500">From</label>
-                <input type="date" wire:model.live="dateFrom" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                <input type="text" data-datepicker wire:model.live="dateFrom" readonly class="w-full cursor-pointer rounded-2xl border border-[#D2F9E7] px-3 py-2" />
             </div>
             <div>
                 <label class="text-xs text-slate-500">To</label>
-                <input type="date" wire:model.live="dateTo" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                <input type="text" data-datepicker wire:model.live="dateTo" readonly class="w-full cursor-pointer rounded-2xl border border-[#D2F9E7] px-3 py-2" />
             </div>
         @endif
         <div>

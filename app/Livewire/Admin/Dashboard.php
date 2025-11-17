@@ -5,22 +5,36 @@ namespace App\Livewire\Admin;
 use App\Models\CategoryIcon;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\WalletIcon;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 #[Layout('layouts.app')]
 class Dashboard extends Component
 {
+    use WithFileUploads;
+
     public array $iconForm = [
         'name' => '',
         'icon_key' => '',
         'icon_type' => 'icon',
         'description' => '',
     ];
+
+    public array $walletIconForm = [
+        'name' => '',
+        'source_type' => 'class',
+        'value' => '',
+        'icon_color' => '#095C4A',
+        'background_color' => '#D2F9E7',
+    ];
+
+    public $walletIconUpload;
 
     public function mount(): void
     {
@@ -57,6 +71,55 @@ class Dashboard extends Component
         session()->flash('admin_status', 'Icon deleted');
     }
 
+    public function saveWalletIcon(): void
+    {
+        $data = $this->validate([
+            'walletIconForm.name' => ['required', 'string', 'max:255'],
+            'walletIconForm.source_type' => ['required', Rule::in(['class', 'upload'])],
+            'walletIconForm.value' => [Rule::requiredIf($this->walletIconForm['source_type'] === 'class'), 'string', 'max:191'],
+            'walletIconForm.icon_color' => ['nullable', 'string'],
+            'walletIconForm.background_color' => ['nullable', 'string'],
+            'walletIconUpload' => [Rule::requiredIf($this->walletIconForm['source_type'] === 'upload'), 'image', 'max:1024'],
+        ]);
+
+        $value = $this->walletIconForm['value'];
+
+        if ($this->walletIconForm['source_type'] === 'upload' && $this->walletIconUpload) {
+            $value = $this->walletIconUpload->store('wallet-icons', 'public');
+        }
+
+        WalletIcon::create([
+            'name' => $this->walletIconForm['name'],
+            'source_type' => $this->walletIconForm['source_type'],
+            'value' => $value,
+            'icon_color' => $this->walletIconForm['icon_color'],
+            'background_color' => $this->walletIconForm['background_color'],
+        ]);
+
+        $this->walletIconForm = [
+            'name' => '',
+            'source_type' => 'class',
+            'value' => '',
+            'icon_color' => '#095C4A',
+            'background_color' => '#D2F9E7',
+        ];
+        $this->walletIconUpload = null;
+
+        session()->flash('admin_status', 'Wallet icon saved');
+    }
+
+    public function deleteWalletIcon(int $iconId): void
+    {
+        $icon = WalletIcon::findOrFail($iconId);
+
+        if ($icon->source_type === 'upload') {
+            Storage::disk('public')->delete($icon->value);
+        }
+
+        $icon->delete();
+        session()->flash('admin_status', 'Wallet icon deleted');
+    }
+
     public function render(): View
     {
         $users = User::query()
@@ -86,6 +149,7 @@ class Dashboard extends Component
             'users' => $users,
             'transactionsPerDay' => $transactionsPerDay,
             'icons' => $icons,
+            'walletIcons' => WalletIcon::orderBy('name')->get(),
             'globalSettings' => config('myexpenses.admin.global_settings'),
         ]);
     }

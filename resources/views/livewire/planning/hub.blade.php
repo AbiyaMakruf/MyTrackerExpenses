@@ -58,12 +58,12 @@
                 <div class="grid gap-3 md:grid-cols-2">
                     <div>
                         <label class="text-xs text-slate-500">Amount</label>
-                        <input type="number" step="0.01" wire:model.live="plannedPaymentForm.amount" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                        <input type="text" inputmode="decimal" data-money-input wire:model.live="plannedPaymentForm.amount" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
                         @error('plannedPaymentForm.amount') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="text-xs text-slate-500">Due date</label>
-                        <input type="date" wire:model.live="plannedPaymentForm.due_date" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                        <input type="text" data-datepicker wire:model.live="plannedPaymentForm.due_date" readonly class="w-full cursor-pointer rounded-2xl border border-[#D2F9E7] px-3 py-2" />
                         @error('plannedPaymentForm.due_date') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                 </div>
@@ -135,7 +135,7 @@
                 <div class="grid gap-3 md:grid-cols-2">
                     <div>
                         <label class="text-xs text-slate-500">Amount</label>
-                        <input type="number" step="0.01" wire:model.live="budgetForm.amount" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                        <input type="text" inputmode="decimal" data-money-input wire:model.live="budgetForm.amount" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
                         @error('budgetForm.amount') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                     <div>
@@ -168,11 +168,11 @@
                 <div class="grid gap-3 md:grid-cols-2">
                     <div>
                         <label class="text-xs text-slate-500">Start date</label>
-                        <input type="date" wire:model.live="budgetForm.start_date" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                        <input type="text" data-datepicker wire:model.live="budgetForm.start_date" readonly class="w-full cursor-pointer rounded-2xl border border-[#D2F9E7] px-3 py-2" />
                     </div>
                     <div>
                         <label class="text-xs text-slate-500">End date</label>
-                        <input type="date" wire:model.live="budgetForm.end_date" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                        <input type="text" data-datepicker wire:model.live="budgetForm.end_date" readonly class="w-full cursor-pointer rounded-2xl border border-[#D2F9E7] px-3 py-2" />
                         @error('budgetForm.end_date') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                 </div>
@@ -214,12 +214,12 @@
                 <div class="grid gap-3 md:grid-cols-2">
                     <div>
                         <label class="text-xs text-slate-500">Target amount</label>
-                        <input type="number" step="0.01" wire:model.live="goalForm.target_amount" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                        <input type="text" inputmode="decimal" data-money-input wire:model.live="goalForm.target_amount" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
                         @error('goalForm.target_amount') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="text-xs text-slate-500">Current amount</label>
-                        <input type="number" step="0.01" wire:model.live="goalForm.current_amount" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                        <input type="text" inputmode="decimal" data-money-input wire:model.live="goalForm.current_amount" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
                     </div>
                 </div>
                 <div class="grid gap-3 md:grid-cols-2">
@@ -234,13 +234,13 @@
                     </div>
                     <div>
                         <label class="text-xs text-slate-500">Deadline</label>
-                        <input type="date" wire:model.live="goalForm.deadline" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                        <input type="text" data-datepicker wire:model.live="goalForm.deadline" readonly class="w-full cursor-pointer rounded-2xl border border-[#D2F9E7] px-3 py-2" />
                     </div>
                 </div>
                 <div class="grid gap-3 md:grid-cols-2">
                     <div>
                         <label class="text-xs text-slate-500">Auto-save amount</label>
-                        <input type="number" step="0.01" wire:model.live="goalForm.auto_save_amount" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                        <input type="text" inputmode="decimal" data-money-input wire:model.live="goalForm.auto_save_amount" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
                     </div>
                     <div>
                         <label class="text-xs text-slate-500">Auto-save interval</label>
@@ -288,7 +288,7 @@
                 <div class="grid gap-3 md:grid-cols-2">
                     <div>
                         <label class="text-xs text-slate-500">Amount</label>
-                        <input type="number" step="0.01" wire:model.live="subscriptionForm.amount" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                        <input type="text" inputmode="decimal" data-money-input wire:model.live="subscriptionForm.amount" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
                         @error('subscriptionForm.amount') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                     <div>
@@ -303,7 +303,7 @@
                 <div class="grid gap-3 md:grid-cols-2">
                     <div>
                         <label class="text-xs text-slate-500">Next billing date</label>
-                        <input type="date" wire:model.live="subscriptionForm.next_billing_date" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                        <input type="text" data-datepicker wire:model.live="subscriptionForm.next_billing_date" readonly class="w-full cursor-pointer rounded-2xl border border-[#D2F9E7] px-3 py-2" />
                         @error('subscriptionForm.next_billing_date') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                     <div>
@@ -326,6 +326,17 @@
                         @endforeach
                     </select>
                 </div>
+                @if ($subscriptionSubCategories->isNotEmpty())
+                    <div>
+                        <label class="text-xs text-slate-500">Sub-category</label>
+                        <select wire:model.live="subscriptionForm.sub_category_id" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2">
+                            <option value="">Optional</option>
+                            @foreach ($subscriptionSubCategories as $child)
+                                <option value="{{ $child->id }}">{{ $child->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
                 <div class="grid gap-3 md:grid-cols-2">
                     <div>
                         <label class="text-xs text-slate-500">Auto-post transaction</label>

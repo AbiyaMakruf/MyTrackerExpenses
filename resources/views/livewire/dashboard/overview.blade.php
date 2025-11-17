@@ -1,3 +1,5 @@
+@php use Illuminate\Support\Facades\Storage; use Illuminate\Support\Str; @endphp
+
 <section class="glass-card">
     <div class="flex flex-col gap-3">
         <div class="flex items-center justify-between">
@@ -35,17 +37,40 @@
             </div>
 
             <div class="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-inner">
-                <p class="text-xs uppercase tracking-wide text-slate-500">Total per wallet</p>
-                <div class="mt-3 space-y-3">
-                    @foreach ($wallets as $wallet)
-                        <div class="flex items-center justify-between rounded-xl bg-[#F6FFFA] px-3 py-2">
-                            <div>
-                                <p class="text-sm font-semibold text-[#095C4A]">{{ $wallet->name }}</p>
-                                <p class="text-xs text-slate-500">{{ ucfirst($wallet->type) }}</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-base font-semibold text-[#08745C]">{{ number_format($wallet->current_balance, 0) }}</p>
-                                <p class="text-[10px] text-slate-400">{{ $wallet->currency }}</p>
+                <p class="text-xs uppercase tracking-wide text-slate-500">Wallet overview</p>
+                <div class="mt-3 space-y-4">
+                    @foreach ($walletGroups as $group => $items)
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ $group }}</p>
+                            <div class="mt-2 space-y-2">
+                                @foreach ($items as $wallet)
+                                    @php
+                                        $icon = $wallet->iconDefinition;
+                                        $bg = $wallet->icon_background ?: '#F6FFFA';
+                                        $color = $wallet->icon_color ?: '#095C4A';
+                                    @endphp
+                                    <div class="flex items-center justify-between rounded-xl border border-[#D2F9E7] bg-white px-3 py-2 shadow-sm">
+                                        <div class="flex items-center gap-3">
+                                    <div class="flex h-10 w-10 items-center justify-center rounded-2xl" style="background-color: {{ $bg }}; color: {{ $color }}">
+                                        @if ($icon && $icon->source_type === 'upload')
+                                            <img src="{{ Storage::disk('public')->url($icon->value) }}" alt="{{ $icon->name }}" class="h-6 w-6 object-contain">
+                                        @elseif ($icon && filled($icon->value))
+                                            <span data-fa-icon="{{ $icon->value }}" class="text-lg" style="color: {{ $color }}"></span>
+                                        @else
+                                            <span class="text-sm font-semibold">{{ Str::upper(Str::substr($wallet->name, 0, 2)) }}</span>
+                                        @endif
+                                    </div>
+                                            <div>
+                                                <p class="text-sm font-semibold text-[#095C4A]">{{ $wallet->name }}</p>
+                                                <p class="text-xs text-slate-500">{{ strtoupper($wallet->currency) }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-base font-semibold text-[#08745C]">{{ number_format($wallet->current_balance, 0) }}</p>
+                                            <p class="text-[10px] text-slate-400">{{ ucfirst($wallet->type) }}</p>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
                         </div>
                     @endforeach
@@ -274,20 +299,38 @@
             </div>
             <a href="{{ route('records.add') }}" wire:navigate class="text-xs font-semibold text-[#08745C]">Add record</a>
         </div>
-        <div class="divide-y divide-[#D2F9E7]">
+        <div class="space-y-3">
             @foreach ($recentTransactions as $transaction)
-                <div class="flex items-center justify-between py-3">
-                    <div>
-                        <p class="text-sm font-semibold text-[#095C4A]">{{ $transaction->category->name ?? ucfirst($transaction->type) }}</p>
-                        <p class="text-xs text-slate-500">{{ $transaction->wallet->name }} • {{ $transaction->transaction_date->format(config('myexpenses.default_datetime_format')) }}</p>
+                @php
+                    $iconDef = $transaction->subCategory?->icon ?? $transaction->category?->icon;
+                    $bg = $transaction->category->color ?? '#F6FFFA';
+                @endphp
+                <a href="{{ route('transactions.show', $transaction) }}" class="flex items-center gap-4 rounded-2xl border border-[#E2F5ED] bg-white px-3 py-3 shadow-sm transition-all duration-200 ease-out hover:scale-[1.01]">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl text-[#095C4A]" style="background-color: {{ $bg }}">
+                        @if ($iconDef && $iconDef->icon_type === 'emoji')
+                            <span class="text-xl">{{ $iconDef->icon_key }}</span>
+                        @elseif ($iconDef && $iconDef->icon_key)
+                            <span class="text-sm font-semibold">{{ Str::upper(Str::substr($iconDef->icon_key, 0, 2)) }}</span>
+                        @else
+                            <span class="text-sm font-semibold">{{ Str::upper(Str::substr($transaction->category->name ?? $transaction->type, 0, 2)) }}</span>
+                        @endif
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold text-[#095C4A]">
+                            {{ $transaction->category->name ?? ucfirst($transaction->type) }}
+                            @if ($transaction->subCategory)
+                                <span class="text-xs font-normal text-slate-500">• {{ $transaction->subCategory->name }}</span>
+                            @endif
+                        </p>
+                        <p class="text-xs text-slate-500">{{ $transaction->wallet->name }} • {{ $transaction->transaction_date->format('l, d F H:i') }}</p>
                     </div>
                     <div class="text-right">
-                        <p class="{{ $transaction->type === 'income' ? 'text-[#08745C]' : 'text-[#FB7185]' }} font-semibold">
+                        <p class="{{ $transaction->type === 'income' ? 'text-[#08745C]' : 'text-[#FB7185]' }} text-base font-semibold">
                             {{ $transaction->type === 'income' ? '+' : '-' }}{{ number_format($transaction->amount, 0) }}
                         </p>
                         <p class="text-[10px] text-slate-400">{{ $transaction->currency }}</p>
                     </div>
-                </div>
+                </a>
             @endforeach
         </div>
     </div>

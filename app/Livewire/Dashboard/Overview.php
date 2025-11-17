@@ -43,38 +43,33 @@ class Overview extends Component
     public function render(): View
     {
         $user = Auth::user();
-        $wallets = $user->wallets()->orderByDesc('is_default')->orderBy('name')->get();
         [$startDate, $endDate] = $this->resolveDateRange();
         $transactionQuery = $this->queryForPeriod($startDate, $endDate);
 
-        $recentTransactions = (clone $transactionQuery)
-            ->latest('transaction_date')
-            ->limit(10)
-            ->with(['wallet', 'category'])
+        $wallets = $user->wallets()
+            ->with('iconDefinition')
+            ->orderByDesc('is_default')
+            ->orderBy('name')
             ->get();
-
-        $cashFlow = [
-            'income' => (clone $transactionQuery)->where('type', 'income')->sum('amount'),
-            'expense' => (clone $transactionQuery)->where('type', 'expense')->sum('amount'),
-        ];
-
-        $balanceTrend = $this->buildBalanceTrend($startDate, $endDate);
-        $topExpenses = $this->buildTopExpenses($transactionQuery);
-        $budgetProgress = $this->buildBudgetProgress($user, $startDate, $endDate);
-        $goalsSummary = $this->buildGoalSummary($user);
-        $upcomingRecurring = $this->buildUpcomingRecurring($user);
-        $upcomingSubscriptions = $this->buildUpcomingSubscriptions($user);
 
         return view('livewire.dashboard.overview', [
             'wallets' => $wallets,
-            'recentTransactions' => $recentTransactions,
-            'cashFlow' => $cashFlow,
-            'balanceTrend' => $balanceTrend,
-            'topExpenses' => $topExpenses,
-            'budgetProgress' => $budgetProgress,
-            'goalsSummary' => $goalsSummary,
-            'upcomingRecurring' => $upcomingRecurring,
-            'upcomingSubscriptions' => $upcomingSubscriptions,
+            'walletGroups' => $this->groupWallets($wallets),
+            'recentTransactions' => (clone $transactionQuery)
+                ->latest('transaction_date')
+                ->limit(10)
+                ->with(['wallet', 'category.icon', 'subCategory.icon'])
+                ->get(),
+            'cashFlow' => [
+                'income' => (clone $transactionQuery)->where('type', 'income')->sum('amount'),
+                'expense' => (clone $transactionQuery)->where('type', 'expense')->sum('amount'),
+            ],
+            'balanceTrend' => $this->buildBalanceTrend($startDate, $endDate),
+            'topExpenses' => $this->buildTopExpenses($transactionQuery),
+            'budgetProgress' => $this->buildBudgetProgress($user, $startDate, $endDate),
+            'goalsSummary' => $this->buildGoalSummary($user),
+            'upcomingRecurring' => $this->buildUpcomingRecurring($user),
+            'upcomingSubscriptions' => $this->buildUpcomingSubscriptions($user),
             'periodLabel' => $this->periodOptions[$this->period] ?? $this->period,
         ]);
     }
@@ -99,23 +94,17 @@ class Overview extends Component
 
     protected function buildBalanceTrend(Carbon $start, Carbon $end): array
     {
-        $period = Carbon::parse($start)->toPeriod($end, '1 day');
-        $data = [];
-
-        foreach ($period as $date) {
-            $sum = Transaction::query()
-                ->where('user_id', Auth::id())
-                ->whereDate('transaction_date', $date)
-                ->selectRaw("SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END) as net")
-                ->value('net') ?? 0;
-
-            $data[] = [
-                'date' => $date->format('d/m'),
-                'net' => $sum,
-            ];
-        }
-
-        return $data;
+        return Transaction::query()
+            ->where('user_id', Auth::id())
+            ->whereBetween('transaction_date', [$start, $end])
+            ->selectRaw("DATE(transaction_date) as day, SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END) as net")
+            ->groupBy('day')
+            ->orderBy('day')
+            ->get()
+            ->map(fn ($row) => [
+                'date' => Carbon::parse($row->day)->format('d/m'),
+                'net' => (float) $row->net,
+            ])->all();
     }
 
     protected function buildTopExpenses(Builder $query): Collection
@@ -132,17 +121,20 @@ class Overview extends Component
 
     protected function buildBudgetProgress(User $user, Carbon $start, Carbon $end): Collection
     {
+        $spendingByCategory = Transaction::query()
+            ->where('user_id', $user->id)
+            ->where('type', 'expense')
+            ->whereBetween('transaction_date', [$start, $end])
+            ->selectRaw('COALESCE(category_id, 0) as bucket, SUM(amount) as total')
+            ->groupBy('bucket')
+            ->pluck('total', 'bucket');
+
         return $user->budgets()
             ->with('category')
             ->get()
-            ->map(function (Budget $budget) use ($start, $end) {
-                $spent = Transaction::query()
-                    ->where('user_id', $budget->user_id)
-                    ->where('type', 'expense')
-                    ->when($budget->category_id, fn ($query) => $query->where('category_id', $budget->category_id))
-                    ->whereBetween('transaction_date', [$start, $end])
-                    ->sum('amount');
-
+            ->map(function (Budget $budget) use ($spendingByCategory) {
+                $key = $budget->category_id ?? 0;
+                $spent = (float) ($spendingByCategory[$key] ?? 0);
                 $percentage = $budget->amount > 0 ? min(100, round(($spent / $budget->amount) * 100, 2)) : 0;
 
                 return [
@@ -199,5 +191,19 @@ class Overview extends Component
                 ->orderBy('next_billing_date')
                 ->get(),
         ];
+    }
+
+    protected function groupWallets(Collection $wallets): Collection
+    {
+        $labels = [
+            'bank' => 'Bank',
+            'e-wallet' => 'E-Wallet',
+            'cash' => 'Cash',
+            'investment' => 'Investment',
+        ];
+
+        return $wallets->groupBy(function ($wallet) use ($labels) {
+            return $labels[$wallet->type] ?? 'Others';
+        });
     }
 }

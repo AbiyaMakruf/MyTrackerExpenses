@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
@@ -80,8 +81,12 @@ class DatabaseSeeder extends Seeder
     {
         $admin = User::factory()->create([
             'name' => 'Admin',
-            'email' => 'admin@myexpenses.test',
+            'email' => 'admin@abiya',
             'role' => 'admin',
+            'password' => Hash::make('Abiyajr11'),
+            'two_factor_secret' => null,
+            'two_factor_recovery_codes' => null,
+            'two_factor_confirmed_at' => null,
         ]);
 
         $user = User::factory()->create([

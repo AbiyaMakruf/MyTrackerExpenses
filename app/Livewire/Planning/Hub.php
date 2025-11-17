@@ -57,6 +57,7 @@ class Hub extends Component
         'next_billing_date' => '',
         'wallet_id' => null,
         'category_id' => null,
+        'sub_category_id' => null,
         'auto_post_transaction' => true,
         'reminder_days' => 3,
         'note' => '',
@@ -172,6 +173,7 @@ class Hub extends Component
             'subscriptionForm.next_billing_date' => ['required', 'date'],
             'subscriptionForm.wallet_id' => ['required', Rule::exists('wallets', 'id')->where('user_id', Auth::id())],
             'subscriptionForm.category_id' => ['nullable', Rule::exists('categories', 'id')],
+            'subscriptionForm.sub_category_id' => ['nullable', Rule::exists('categories', 'id')],
             'subscriptionForm.auto_post_transaction' => ['boolean'],
             'subscriptionForm.reminder_days' => ['required', 'integer', 'min:0'],
             'subscriptionForm.note' => ['nullable', 'string', 'max:500'],
@@ -191,6 +193,7 @@ class Hub extends Component
             'next_billing_date' => '',
             'wallet_id' => null,
             'category_id' => null,
+            'sub_category_id' => null,
             'auto_post_transaction' => true,
             'reminder_days' => 3,
             'note' => '',
@@ -225,6 +228,18 @@ class Hub extends Component
             return $budget;
         });
 
+        $subscriptionSubCategories = collect();
+
+        if ($this->subscriptionForm['category_id']) {
+            $subscriptionSubCategories = Category::query()
+                ->where('parent_id', $this->subscriptionForm['category_id'])
+                ->where(function ($query) {
+                    $query->whereNull('user_id')->orWhere('user_id', Auth::id());
+                })
+                ->orderBy('display_order')
+                ->get();
+        }
+
         return view('livewire.planning.hub', [
             'wallets' => $wallets,
             'categories' => $categories,
@@ -232,6 +247,7 @@ class Hub extends Component
             'budgets' => $budgets,
             'goals' => $user->goals()->latest('deadline')->get(),
             'subscriptions' => $user->subscriptions()->orderBy('next_billing_date')->get(),
+            'subscriptionSubCategories' => $subscriptionSubCategories,
         ]);
     }
 }

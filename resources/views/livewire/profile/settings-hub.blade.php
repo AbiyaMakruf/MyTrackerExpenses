@@ -1,3 +1,5 @@
+@php use Illuminate\Support\Facades\Storage; use Illuminate\Support\Str; @endphp
+
 <section class="glass-card space-y-6">
     <div class="flex flex-col gap-2">
         <h1 class="text-2xl font-semibold text-[#095C4A]">Profile & Settings</h1>
@@ -112,8 +114,35 @@
             </div>
             <div>
                 <label class="text-xs text-slate-500">Initial balance</label>
-                <input type="number" step="0.01" wire:model.live="walletForm.initial_balance" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                <input type="text" inputmode="decimal" data-money-input wire:model.live="walletForm.initial_balance" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
                 @error('walletForm.initial_balance') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
+            </div>
+            <div class="space-y-2">
+                <label class="text-xs text-slate-500">Icon</label>
+                <div class="flex items-center gap-3">
+                    @php($selectedIcon = $walletIcons->firstWhere('id', $walletForm['wallet_icon_id']))
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#D2F9E7] bg-[#F2FFFA] text-[#095C4A]" style="background-color: {{ $walletForm['icon_background'] }}">
+                        @if ($selectedIcon && $selectedIcon->source_type === 'upload')
+                            <img src="{{ Storage::disk('public')->url($selectedIcon->value) }}" alt="{{ $selectedIcon->name }}" class="h-6 w-6 object-contain">
+                        @elseif ($selectedIcon && filled($selectedIcon->value))
+                            <span data-fa-icon="{{ $selectedIcon->value }}" class="text-lg" style="color: {{ $walletForm['icon_color'] }}"></span>
+                        @else
+                            <span class="text-xs text-slate-400">None</span>
+                        @endif
+                    </div>
+                    <button type="button" wire:click="openWalletIconPicker" class="rounded-full border border-[#095C4A] px-4 py-2 text-sm font-semibold text-[#095C4A]">Choose icon</button>
+                </div>
+                @error('walletForm.wallet_icon_id') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
+                <div class="grid gap-3 md:grid-cols-2">
+                    <div>
+                        <label class="text-xs text-slate-500">Icon color</label>
+                        <input type="color" wire:model.live="walletForm.icon_color" class="h-10 w-full rounded-2xl border border-[#D2F9E7]" />
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-500">Background color</label>
+                        <input type="color" wire:model.live="walletForm.icon_background" class="h-10 w-full rounded-2xl border border-[#D2F9E7]" />
+                    </div>
+                </div>
             </div>
             <label class="inline-flex items-center gap-2 text-sm text-[#095C4A]">
                 <input type="checkbox" wire:model.live="walletForm.is_default" class="rounded text-[#095C4A]" />
@@ -122,6 +151,29 @@
             <button type="submit" class="btn-primary w-full">Save wallet</button>
         </form>
     </div>
+
+    @if ($showWalletIconPicker)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div class="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-[#095C4A]">Select wallet icon</h3>
+                    <button type="button" class="text-sm font-semibold text-slate-500" wire:click="closeWalletIconPicker">Close</button>
+                </div>
+                <div class="mt-4 grid grid-cols-4 gap-4">
+                    @foreach ($walletIcons as $icon)
+                        <button type="button" wire:click="selectWalletIcon({{ $icon->id }})" class="flex flex-col items-center gap-2 rounded-2xl border border-[#D2F9E7] bg-[#F6FFFA] p-3 text-sm font-semibold text-[#095C4A]">
+                            @if ($icon->source_type === 'upload')
+                                <img src="{{ Storage::disk('public')->url($icon->value) }}" alt="{{ $icon->name }}" class="h-8 w-8 object-contain">
+                            @else
+                                <span data-fa-icon="{{ $icon->value }}" class="text-xl"></span>
+                            @endif
+                            <span>{{ $icon->name }}</span>
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
 
     <div class="grid gap-4 md:grid-cols-2" id="labels">
         <div class="space-y-3 rounded-2xl border border-[#D2F9E7] bg-white/80 p-4">
@@ -145,7 +197,13 @@
             </div>
             <div>
                 <label class="text-xs text-slate-500">Color</label>
-                <input type="color" wire:model.live="labelForm.color" class="h-10 w-full rounded-2xl border border-[#D2F9E7] px-2 py-1" />
+                <input type="hidden" wire:model.live="labelForm.color" />
+                <div class="grid grid-cols-5 gap-2">
+                    @foreach ($labelPalette as $color)
+                        <button type="button" wire:click="$set('labelForm.color', '{{ $color }}')" class="h-10 rounded-2xl border-2 transition-all duration-200 ease-out hover:scale-[1.05]" style="background-color: {{ $color }}; border-color: {{ $labelForm['color'] === $color ? '#095C4A' : 'transparent' }}"></button>
+                    @endforeach
+                </div>
+                @error('labelForm.color') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
             </div>
             <button type="submit" class="btn-primary w-full">Save label</button>
         </form>
@@ -196,17 +254,47 @@
             </div>
             <div>
                 <label class="text-xs text-slate-500">Icon (admin curated)</label>
-                <select wire:model.live="categoryForm.category_icon_id" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2">
-                    <option value="">Select icon</option>
-                    @foreach ($categoryIcons as $icon)
-                        <option value="{{ $icon->id }}">{{ $icon->name }} ({{ $icon->icon_key }})</option>
-                    @endforeach
-                </select>
+                @php($selectedCategoryIcon = $categoryIcons->firstWhere('id', $categoryForm['category_icon_id']))
+                <div class="flex items-center gap-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#D2F9E7] bg-[#F6FFFA] text-[#095C4A]">
+                        @if ($selectedCategoryIcon && $selectedCategoryIcon->icon_type === 'emoji')
+                            <span class="text-2xl">{{ $selectedCategoryIcon->icon_key }}</span>
+                        @elseif ($selectedCategoryIcon && $selectedCategoryIcon->icon_key)
+                            <span class="text-base font-semibold">{{ Str::upper(Str::substr($selectedCategoryIcon->icon_key, 0, 2)) }}</span>
+                        @else
+                            <span class="text-xs text-slate-400">None</span>
+                        @endif
+                    </div>
+                    <button type="button" wire:click="openCategoryIconPicker" class="rounded-full border border-[#095C4A] px-4 py-2 text-sm font-semibold text-[#095C4A]">Choose icon</button>
+                </div>
                 @error('categoryForm.category_icon_id') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
             </div>
             <button type="submit" class="btn-primary w-full">Save category</button>
         </form>
     </div>
+
+    @if ($showCategoryIconPicker)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div class="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-[#095C4A]">Select category icon</h3>
+                    <button type="button" class="text-sm font-semibold text-slate-500" wire:click="closeCategoryIconPicker">Close</button>
+                </div>
+                <div class="mt-4 grid grid-cols-4 gap-4">
+                    @foreach ($categoryIcons as $icon)
+                        <button type="button" wire:click="selectCategoryIcon({{ $icon->id }})" class="flex flex-col items-center gap-2 rounded-2xl border border-[#D2F9E7] bg-[#F6FFFA] p-3 text-sm font-semibold text-[#095C4A]">
+                            @if ($icon->icon_type === 'emoji')
+                                <span class="text-2xl">{{ $icon->icon_key }}</span>
+                            @else
+                                <span class="text-base font-semibold">{{ Str::upper(Str::substr($icon->icon_key, 0, 2)) }}</span>
+                            @endif
+                            <span>{{ $icon->name }}</span>
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
 
     <div class="rounded-2xl border border-[#72E3BD]/60 bg-white/90 p-4" id="export">
         <h2 class="text-lg font-semibold text-[#095C4A]">Export data</h2>
@@ -233,11 +321,11 @@
             @if ($exportForm['date_range'] === 'custom')
                 <div>
                     <label class="text-xs text-slate-500">From</label>
-                    <input type="date" wire:model.live="exportForm.custom_from" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                    <input type="text" data-datepicker wire:model.live="exportForm.custom_from" readonly class="w-full cursor-pointer rounded-2xl border border-[#D2F9E7] px-3 py-2" />
                 </div>
                 <div>
                     <label class="text-xs text-slate-500">To</label>
-                    <input type="date" wire:model.live="exportForm.custom_to" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                    <input type="text" data-datepicker wire:model.live="exportForm.custom_to" readonly class="w-full cursor-pointer rounded-2xl border border-[#D2F9E7] px-3 py-2" />
                 </div>
             @endif
         </div>
