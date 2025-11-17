@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Budget;
 use App\Models\Category;
-use App\Models\CategoryIcon;
 use App\Models\Goal;
 use App\Models\Label;
 use App\Models\PlannedPayment;
@@ -12,6 +11,7 @@ use App\Models\RecurringTransaction;
 use App\Models\Subscription;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\Icon;
 use App\Models\Wallet;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
@@ -30,48 +30,95 @@ class DatabaseSeeder extends Seeder
     protected function seedDefaultIcons(): void
     {
         $icons = [
-            ['name' => 'Food & Drink', 'icon_key' => 'heroicon-mug-hot', 'icon_type' => 'icon'],
-            ['name' => 'Shopping', 'icon_key' => 'heroicon-shopping-bag', 'icon_type' => 'icon'],
-            ['name' => 'Transport', 'icon_key' => 'heroicon-truck', 'icon_type' => 'icon'],
-            ['name' => 'Salary', 'icon_key' => 'heroicon-banknotes', 'icon_type' => 'icon'],
-            ['name' => 'Health', 'icon_key' => 'heroicon-heart', 'icon_type' => 'icon'],
-            ['name' => 'Subscription', 'icon_key' => 'heroicon-credit-card', 'icon_type' => 'icon'],
-            ['name' => 'Entertainment', 'icon_key' => 'heroicon-tv', 'icon_type' => 'icon'],
-            ['name' => 'Investments', 'icon_key' => 'heroicon-presentation-chart-line', 'icon_type' => 'icon'],
-            ['name' => 'Gift', 'icon_key' => '🎁', 'icon_type' => 'emoji'],
+            // Finance / Money
+            ['label' => 'Wallet', 'group' => 'finance', 'fa_class' => 'fas:wallet'],
+            ['label' => 'Coins', 'group' => 'finance', 'fa_class' => 'fas:coins'],
+            ['label' => 'Money Bill', 'group' => 'finance', 'fa_class' => 'fas:money-bill'],
+            ['label' => 'Money Check', 'group' => 'finance', 'fa_class' => 'fas:money-check'],
+            ['label' => 'Sack Dollar', 'group' => 'finance', 'fa_class' => 'fas:sack-dollar'],
+            ['label' => 'Credit Card', 'group' => 'finance', 'fa_class' => 'far:credit-card'],
+            ['label' => 'Piggy Bank', 'group' => 'finance', 'fa_class' => 'fas:piggy-bank'],
+            // Banks
+            ['label' => 'Building Columns', 'group' => 'banks', 'fa_class' => 'fas:building-columns'],
+            ['label' => 'Bank', 'group' => 'banks', 'fa_class' => 'fas:bank'],
+            ['label' => 'Vault', 'group' => 'banks', 'fa_class' => 'fas:vault'],
+            // Shopping
+            ['label' => 'Cart Shopping', 'group' => 'shopping', 'fa_class' => 'fas:cart-shopping'],
+            ['label' => 'Basket', 'group' => 'shopping', 'fa_class' => 'fas:basket-shopping'],
+            ['label' => 'Store', 'group' => 'shopping', 'fa_class' => 'fas:store'],
+            ['label' => 'Tags', 'group' => 'shopping', 'fa_class' => 'fas:tags'],
+            // Food
+            ['label' => 'Utensils', 'group' => 'food', 'fa_class' => 'fas:utensils'],
+            ['label' => 'Burger', 'group' => 'food', 'fa_class' => 'fas:burger'],
+            ['label' => 'Mug Hot', 'group' => 'food', 'fa_class' => 'fas:mug-hot'],
+            ['label' => 'Wine Glass', 'group' => 'food', 'fa_class' => 'fas:wine-glass'],
+            ['label' => 'Heart Pulse', 'group' => 'health', 'fa_class' => 'fas:heart-pulse'],
+            ['label' => 'Gifts', 'group' => 'general', 'fa_class' => 'fas:gifts'],
+            // Transportation
+            ['label' => 'Car', 'group' => 'transport', 'fa_class' => 'fas:car'],
+            ['label' => 'Motorcycle', 'group' => 'transport', 'fa_class' => 'fas:motorcycle'],
+            ['label' => 'Bus', 'group' => 'transport', 'fa_class' => 'fas:bus'],
+            ['label' => 'Gas Pump', 'group' => 'transport', 'fa_class' => 'fas:gas-pump'],
+            // Bills & Utilities
+            ['label' => 'Invoice', 'group' => 'bills', 'fa_class' => 'fas:file-invoice'],
+            ['label' => 'Bolt', 'group' => 'bills', 'fa_class' => 'fas:bolt'],
+            ['label' => 'Water', 'group' => 'bills', 'fa_class' => 'fas:water'],
+            ['label' => 'Receipt', 'group' => 'bills', 'fa_class' => 'fas:receipt'],
+            // Subscriptions
+            ['label' => 'Cloud', 'group' => 'subscriptions', 'fa_class' => 'fas:cloud'],
+            ['label' => 'TV', 'group' => 'subscriptions', 'fa_class' => 'fas:tv'],
+            ['label' => 'Apple', 'group' => 'subscriptions', 'fa_class' => 'fab:apple'],
+            ['label' => 'Spotify', 'group' => 'subscriptions', 'fa_class' => 'fab:spotify'],
+            ['label' => 'Disney', 'group' => 'subscriptions', 'fa_class' => 'fab:disney'],
+            ['label' => 'Wifi', 'group' => 'subscriptions', 'fa_class' => 'fas:wifi'],
+            // Income
+            ['label' => 'Briefcase', 'group' => 'income', 'fa_class' => 'fas:briefcase'],
+            ['label' => 'Chart Line', 'group' => 'income', 'fa_class' => 'fas:chart-line'],
+            ['label' => 'Dollar Slot', 'group' => 'income', 'fa_class' => 'fas:circle-dollar-to-slot'],
+            // General
+            ['label' => 'Tag', 'group' => 'general', 'fa_class' => 'fas:tag'],
+            ['label' => 'List', 'group' => 'general', 'fa_class' => 'fas:list'],
+            ['label' => 'Box', 'group' => 'general', 'fa_class' => 'fas:box'],
+            ['label' => 'Circle', 'group' => 'general', 'fa_class' => 'fas:circle'],
         ];
 
         foreach ($icons as $icon) {
-            CategoryIcon::updateOrCreate(
-                ['icon_key' => $icon['icon_key']],
-                $icon
+            Icon::updateOrCreate(
+                ['fa_class' => $icon['fa_class']],
+                [
+                    'type' => 'fontawesome',
+                    'label' => $icon['label'],
+                    'group' => $icon['group'],
+                    'is_active' => true,
+                ],
             );
         }
     }
 
     protected function seedDefaultCategories(): void
     {
-        $icons = CategoryIcon::all()->keyBy('icon_key');
+        $icons = Icon::all()->keyBy('fa_class');
         $defaultCategories = [
-            ['name' => 'Food & Beverages', 'type' => 'expense', 'icon_key' => 'heroicon-mug-hot', 'color' => '#F97316'],
-            ['name' => 'Groceries', 'type' => 'expense', 'icon_key' => 'heroicon-shopping-bag', 'color' => '#FACC15'],
-            ['name' => 'Transport', 'type' => 'expense', 'icon_key' => 'heroicon-truck', 'color' => '#60A5FA'],
-            ['name' => 'Health & Fitness', 'type' => 'expense', 'icon_key' => 'heroicon-heart', 'color' => '#F472B6'],
-            ['name' => 'Entertainment', 'type' => 'expense', 'icon_key' => 'heroicon-tv', 'color' => '#A855F7'],
-            ['name' => 'Subscriptions', 'type' => 'expense', 'icon_key' => 'heroicon-credit-card', 'color' => '#0EA5E9'],
-            ['name' => 'Salary', 'type' => 'income', 'icon_key' => 'heroicon-banknotes', 'color' => '#10B981'],
-            ['name' => 'Investments', 'type' => 'income', 'icon_key' => 'heroicon-presentation-chart-line', 'color' => '#14B8A6'],
-            ['name' => 'Gift', 'type' => 'income', 'icon_key' => '🎁', 'color' => '#FB7185'],
+            ['name' => 'Food & Beverages', 'type' => 'expense', 'icon_key' => 'fas:mug-hot', 'color' => '#F97316'],
+            ['name' => 'Groceries', 'type' => 'expense', 'icon_key' => 'fas:cart-shopping', 'color' => '#FACC15'],
+            ['name' => 'Transport', 'type' => 'expense', 'icon_key' => 'fas:car', 'color' => '#60A5FA'],
+            ['name' => 'Health & Fitness', 'type' => 'expense', 'icon_key' => 'fas:heart-pulse', 'color' => '#F472B6'],
+            ['name' => 'Entertainment', 'type' => 'expense', 'icon_key' => 'fas:tv', 'color' => '#A855F7'],
+            ['name' => 'Subscriptions', 'type' => 'expense', 'icon_key' => 'fas:wifi', 'color' => '#0EA5E9'],
+            ['name' => 'Salary', 'type' => 'income', 'icon_key' => 'fas:briefcase', 'color' => '#10B981'],
+            ['name' => 'Investments', 'type' => 'income', 'icon_key' => 'fas:chart-line', 'color' => '#14B8A6'],
+            ['name' => 'Gift', 'type' => 'income', 'icon_key' => 'fas:gifts', 'color' => '#FB7185'],
         ];
 
         foreach ($defaultCategories as $order => $category) {
             Category::updateOrCreate(
                 ['name' => $category['name'], 'type' => $category['type'], 'user_id' => null],
                 [
-                    'category_icon_id' => $icons[$category['icon_key']]->id ?? null,
+                    'icon_id' => $icons[$category['icon_key']]->id ?? null,
                     'color' => $category['color'],
                     'display_order' => $order + 1,
                     'is_default' => true,
+                    'icon_background' => $category['color'],
                 ]
             );
         }
@@ -94,6 +141,9 @@ class DatabaseSeeder extends Seeder
             'email' => 'demo@myexpenses.test',
         ]);
 
+        $walletIcon = Icon::where('fa_class', 'fas:wallet')->first();
+        $cashIcon = Icon::where('fa_class', 'fas:money-bill')->first();
+
         $wallets = [
             'main' => Wallet::factory()->for($user)->create([
                 'name' => config('myexpenses.wallets.default_name'),
@@ -101,12 +151,18 @@ class DatabaseSeeder extends Seeder
                 'initial_balance' => 5_000_000,
                 'current_balance' => 5_000_000,
                 'is_default' => true,
+                'icon_id' => optional($walletIcon)->id,
+                'icon_color' => '#095C4A',
+                'icon_background' => '#D2F9E7',
             ]),
             'cash' => Wallet::factory()->for($user)->create([
                 'name' => 'Cash',
                 'type' => 'cash',
                 'initial_balance' => 1_000_000,
                 'current_balance' => 750_000,
+                'icon_id' => optional($cashIcon)->id,
+                'icon_color' => '#F97316',
+                'icon_background' => '#FFF7ED',
             ]),
         ];
 

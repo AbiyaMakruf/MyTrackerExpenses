@@ -12,7 +12,7 @@ class Category extends Model
 
     protected $fillable = [
         'user_id',
-        'category_icon_id',
+        'icon_id',
         'parent_id',
         'name',
         'type',
@@ -20,6 +20,8 @@ class Category extends Model
         'is_default',
         'is_archived',
         'display_order',
+        'icon_color',
+        'icon_background',
     ];
 
     protected $casts = [
@@ -29,7 +31,7 @@ class Category extends Model
 
     public function icon()
     {
-        return $this->belongsTo(CategoryIcon::class, 'category_icon_id');
+        return $this->belongsTo(Icon::class, 'icon_id');
     }
 
     public function user()

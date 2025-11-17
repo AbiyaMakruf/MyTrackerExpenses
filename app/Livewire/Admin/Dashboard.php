@@ -2,10 +2,9 @@
 
 namespace App\Livewire\Admin;
 
-use App\Models\CategoryIcon;
+use App\Models\Icon;
 use App\Models\Transaction;
 use App\Models\User;
-use App\Models\WalletIcon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -19,105 +18,101 @@ class Dashboard extends Component
 {
     use WithFileUploads;
 
-    public array $iconForm = [
-        'name' => '',
-        'icon_key' => '',
-        'icon_type' => 'icon',
-        'description' => '',
+    public array $fontawesomeForm = [
+        'label' => '',
+        'fa_class' => '',
+        'group' => 'general',
     ];
 
-    public array $walletIconForm = [
-        'name' => '',
-        'source_type' => 'class',
-        'value' => '',
-        'icon_color' => '#095C4A',
-        'background_color' => '#D2F9E7',
+    public array $customIconForm = [
+        'label' => '',
+        'group' => 'general',
     ];
 
-    public $walletIconUpload;
+    public $iconUpload;
+
+    public string $iconTab = 'fontawesome';
+
+    public string $iconSearch = '';
 
     public function mount(): void
     {
         Gate::authorize('access-admin');
     }
 
-    public function saveIcon(): void
+    public function saveFontawesomeIcon(): void
     {
         $data = $this->validate([
-            'iconForm.name' => ['required', 'string'],
-            'iconForm.icon_key' => ['required', 'string', 'max:191', Rule::unique('category_icons', 'icon_key')],
-            'iconForm.icon_type' => ['required', Rule::in(['icon', 'emoji'])],
-            'iconForm.description' => ['nullable', 'string', 'max:255'],
-        ])['iconForm'];
+            'fontawesomeForm.label' => ['required', 'string', 'max:255'],
+            'fontawesomeForm.fa_class' => ['required', 'string', 'max:191', Rule::unique('icons', 'fa_class')],
+            'fontawesomeForm.group' => ['nullable', 'string', 'max:191'],
+        ])['fontawesomeForm'];
 
-        CategoryIcon::create([
-            ...$data,
+        Icon::create([
+            'type' => 'fontawesome',
+            'label' => $data['label'],
+            'fa_class' => $data['fa_class'],
+            'group' => $data['group'],
+            'created_by' => auth()->id(),
             'is_active' => true,
         ]);
 
-        $this->iconForm = [
-            'name' => '',
-            'icon_key' => '',
-            'icon_type' => 'icon',
-            'description' => '',
+        $this->fontawesomeForm = [
+            'label' => '',
+            'fa_class' => '',
+            'group' => 'general',
         ];
 
-        session()->flash('admin_status', 'Icon saved');
+        session()->flash('admin_status', 'FontAwesome icon saved');
+    }
+
+    public function saveCustomIcon(): void
+    {
+        $this->validate([
+            'customIconForm.label' => ['required', 'string', 'max:255'],
+            'customIconForm.group' => ['nullable', 'string', 'max:191'],
+            'iconUpload' => ['required', 'image', 'max:1024'],
+        ]);
+
+        $path = $this->iconUpload->store('icons/custom', 'public');
+
+        Icon::create([
+            'type' => 'image',
+            'label' => $this->customIconForm['label'],
+            'image_path' => $path,
+            'group' => $this->customIconForm['group'],
+            'created_by' => auth()->id(),
+            'is_active' => true,
+        ]);
+
+        $this->customIconForm = [
+            'label' => '',
+            'group' => 'general',
+        ];
+        $this->iconUpload = null;
+
+        session()->flash('admin_status', 'Custom icon saved');
     }
 
     public function deleteIcon(int $iconId): void
     {
-        CategoryIcon::findOrFail($iconId)->delete();
+        $icon = Icon::findOrFail($iconId);
+
+        if ($icon->type === 'image' && $icon->image_path) {
+            Storage::disk('public')->delete($icon->image_path);
+        }
+
+        $icon->wallets()->update(['icon_id' => null]);
+        $icon->categories()->update(['icon_id' => null]);
+
+        $icon->delete();
         session()->flash('admin_status', 'Icon deleted');
     }
 
-    public function saveWalletIcon(): void
+    public function toggleIcon(int $iconId): void
     {
-        $data = $this->validate([
-            'walletIconForm.name' => ['required', 'string', 'max:255'],
-            'walletIconForm.source_type' => ['required', Rule::in(['class', 'upload'])],
-            'walletIconForm.value' => [Rule::requiredIf($this->walletIconForm['source_type'] === 'class'), 'string', 'max:191'],
-            'walletIconForm.icon_color' => ['nullable', 'string'],
-            'walletIconForm.background_color' => ['nullable', 'string'],
-            'walletIconUpload' => [Rule::requiredIf($this->walletIconForm['source_type'] === 'upload'), 'image', 'max:1024'],
-        ]);
-
-        $value = $this->walletIconForm['value'];
-
-        if ($this->walletIconForm['source_type'] === 'upload' && $this->walletIconUpload) {
-            $value = $this->walletIconUpload->store('wallet-icons', 'public');
-        }
-
-        WalletIcon::create([
-            'name' => $this->walletIconForm['name'],
-            'source_type' => $this->walletIconForm['source_type'],
-            'value' => $value,
-            'icon_color' => $this->walletIconForm['icon_color'],
-            'background_color' => $this->walletIconForm['background_color'],
-        ]);
-
-        $this->walletIconForm = [
-            'name' => '',
-            'source_type' => 'class',
-            'value' => '',
-            'icon_color' => '#095C4A',
-            'background_color' => '#D2F9E7',
-        ];
-        $this->walletIconUpload = null;
-
-        session()->flash('admin_status', 'Wallet icon saved');
-    }
-
-    public function deleteWalletIcon(int $iconId): void
-    {
-        $icon = WalletIcon::findOrFail($iconId);
-
-        if ($icon->source_type === 'upload') {
-            Storage::disk('public')->delete($icon->value);
-        }
-
-        $icon->delete();
-        session()->flash('admin_status', 'Wallet icon deleted');
+        $icon = Icon::findOrFail($iconId);
+        $icon->update(['is_active' => ! $icon->is_active]);
     }
 
     public function render(): View
@@ -142,14 +137,24 @@ class Dashboard extends Component
             ->orderBy('date')
             ->get();
 
-        $icons = CategoryIcon::orderBy('name')->get();
+        $iconsQuery = Icon::query()
+            ->when($this->iconSearch, function ($query) {
+                $query->where(function ($sub) {
+                    $sub->where('label', 'like', '%'.$this->iconSearch.'%')
+                        ->orWhere('fa_class', 'like', '%'.$this->iconSearch.'%');
+                });
+            })
+            ->orderBy('label');
+
+        $fontawesomeIcons = (clone $iconsQuery)->where('type', 'fontawesome')->get();
+        $customIcons = (clone $iconsQuery)->where('type', 'image')->get();
 
         return view('livewire.admin.dashboard', [
             'stats' => $stats,
             'users' => $users,
             'transactionsPerDay' => $transactionsPerDay,
-            'icons' => $icons,
-            'walletIcons' => WalletIcon::orderBy('name')->get(),
+            'fontawesomeIcons' => $fontawesomeIcons,
+            'customIcons' => $customIcons,
             'globalSettings' => config('myexpenses.admin.global_settings'),
         ]);
     }

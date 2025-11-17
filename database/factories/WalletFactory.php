@@ -22,7 +22,9 @@ class WalletFactory extends Factory
             'initial_balance' => fake()->numberBetween(100000, 5000000),
             'current_balance' => fn (array $attributes) => $attributes['initial_balance'],
             'is_default' => false,
-            'icon' => 'heroicon-wallet',
+            'icon_id' => null,
+            'icon_color' => null,
+            'icon_background' => null,
         ];
     }
 }

@@ -51,15 +51,15 @@
                                     @endphp
                                     <div class="flex items-center justify-between rounded-xl border border-[#D2F9E7] bg-white px-3 py-2 shadow-sm">
                                         <div class="flex items-center gap-3">
-                                    <div class="flex h-10 w-10 items-center justify-center rounded-2xl" style="background-color: {{ $bg }}; color: {{ $color }}">
-                                        @if ($icon && $icon->source_type === 'upload')
-                                            <img src="{{ Storage::disk('public')->url($icon->value) }}" alt="{{ $icon->name }}" class="h-6 w-6 object-contain">
-                                        @elseif ($icon && filled($icon->value))
-                                            <span data-fa-icon="{{ $icon->value }}" class="text-lg" style="color: {{ $color }}"></span>
-                                        @else
-                                            <span class="text-sm font-semibold">{{ Str::upper(Str::substr($wallet->name, 0, 2)) }}</span>
-                                        @endif
-                                    </div>
+                                            <div class="flex h-10 w-10 items-center justify-center rounded-2xl" style="background-color: {{ $bg }}; color: {{ $color }}">
+                                                @if ($icon && $icon->type === 'image' && $icon->image_path)
+                                                    <img src="{{ Storage::disk('public')->url($icon->image_path) }}" alt="{{ $icon->label }}" class="h-6 w-6 object-contain">
+                                                @elseif ($icon && $icon->fa_class)
+                                                    <span data-fa-icon="{{ $icon->fa_class }}" class="text-lg"></span>
+                                                @else
+                                                    <span class="text-sm font-semibold">{{ Str::upper(Str::substr($wallet->name, 0, 2)) }}</span>
+                                                @endif
+                                            </div>
                                             <div>
                                                 <p class="text-sm font-semibold text-[#095C4A]">{{ $wallet->name }}</p>
                                                 <p class="text-xs text-slate-500">{{ strtoupper($wallet->currency) }}</p>
@@ -302,15 +302,17 @@
         <div class="space-y-3">
             @foreach ($recentTransactions as $transaction)
                 @php
-                    $iconDef = $transaction->subCategory?->icon ?? $transaction->category?->icon;
-                    $bg = $transaction->category->color ?? '#F6FFFA';
+                    $categoryForIcon = $transaction->subCategory ?? $transaction->category;
+                    $iconDef = $categoryForIcon?->icon;
+                    $iconBg = optional($categoryForIcon)->icon_background ?? optional($categoryForIcon)->color ?? '#F6FFFA';
+                    $iconColor = optional($categoryForIcon)->icon_color ?? '#095C4A';
                 @endphp
                 <a href="{{ route('transactions.show', $transaction) }}" class="flex items-center gap-4 rounded-2xl border border-[#E2F5ED] bg-white px-3 py-3 shadow-sm transition-all duration-200 ease-out hover:scale-[1.01]">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl text-[#095C4A]" style="background-color: {{ $bg }}">
-                        @if ($iconDef && $iconDef->icon_type === 'emoji')
-                            <span class="text-xl">{{ $iconDef->icon_key }}</span>
-                        @elseif ($iconDef && $iconDef->icon_key)
-                            <span class="text-sm font-semibold">{{ Str::upper(Str::substr($iconDef->icon_key, 0, 2)) }}</span>
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl" style="background-color: {{ $iconBg }}; color: {{ $iconColor }}">
+                        @if ($iconDef && $iconDef->type === 'image' && $iconDef->image_path)
+                            <img src="{{ Storage::disk('public')->url($iconDef->image_path) }}" alt="{{ $iconDef->label }}" class="h-8 w-8 object-contain">
+                        @elseif ($iconDef && $iconDef->fa_class)
+                            <span data-fa-icon="{{ $iconDef->fa_class }}" class="text-lg"></span>
                         @else
                             <span class="text-sm font-semibold">{{ Str::upper(Str::substr($transaction->category->name ?? $transaction->type, 0, 2)) }}</span>
                         @endif

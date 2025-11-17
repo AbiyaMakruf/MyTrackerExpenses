@@ -3,11 +3,10 @@
 namespace App\Livewire\Profile;
 
 use App\Models\Category;
-use App\Models\CategoryIcon;
+use App\Models\Icon;
 use App\Models\Label;
 use App\Models\Transaction;
 use App\Models\Wallet;
-use App\Models\WalletIcon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -34,7 +33,7 @@ class SettingsHub extends Component
         'currency' => null,
         'initial_balance' => null,
         'is_default' => false,
-        'wallet_icon_id' => null,
+        'icon_id' => null,
         'icon_color' => '#095C4A',
         'icon_background' => '#D2F9E7',
     ];
@@ -46,15 +45,24 @@ class SettingsHub extends Component
 
     public array $labelPalette = [];
 
-    public bool $showWalletIconPicker = false;
-    public bool $showCategoryIconPicker = false;
+    public bool $iconPickerOpen = false;
+    public string $iconPickerContext = 'wallet';
+    public string $iconPickerTab = 'fontawesome';
+    public string $iconPickerSearch = '';
+    public string $iconPickerIconColor = '#095C4A';
+    public string $iconPickerBackgroundColor = '#D2F9E7';
 
     public array $categoryForm = [
         'name' => '',
         'type' => 'expense',
-        'category_icon_id' => null,
+        'icon_id' => null,
+        'icon_color' => '#095C4A',
+        'icon_background' => '#F6FFFA',
         'parent_id' => null,
     ];
+
+    public ?array $walletIconPreview = null;
+    public ?array $categoryIconPreview = null;
 
     public array $exportForm = [
         'format' => 'csv',
@@ -90,6 +98,9 @@ class SettingsHub extends Component
         ];
 
         $this->labelForm['color'] = $this->labelPalette[0];
+
+        $this->syncWalletIconPreview();
+        $this->syncCategoryIconPreview();
     }
 
     public function saveProfile(): void
@@ -134,7 +145,7 @@ class SettingsHub extends Component
             'walletForm.currency' => ['required', Rule::in(config('myexpenses.currency.supported'))],
             'walletForm.initial_balance' => ['required', 'numeric', 'min:0'],
             'walletForm.is_default' => ['boolean'],
-            'walletForm.wallet_icon_id' => ['nullable', Rule::exists('wallet_icons', 'id')],
+            'walletForm.icon_id' => ['nullable', Rule::exists('icons', 'id')],
             'walletForm.icon_color' => ['nullable', 'string'],
             'walletForm.icon_background' => ['nullable', 'string'],
         ])['walletForm'];
@@ -155,10 +166,11 @@ class SettingsHub extends Component
             'currency' => Auth::user()->base_currency,
             'initial_balance' => null,
             'is_default' => false,
-            'wallet_icon_id' => null,
+            'icon_id' => null,
             'icon_color' => '#095C4A',
             'icon_background' => '#D2F9E7',
         ];
+        $this->walletIconPreview = null;
 
         session()->flash('profile_status', 'Wallet added');
     }
@@ -192,36 +204,42 @@ class SettingsHub extends Component
         session()->flash('profile_status', 'Label removed');
     }
 
-    public function openWalletIconPicker(): void
+    public function openIconPicker(string $context): void
     {
-        $this->showWalletIconPicker = true;
+        $this->iconPickerContext = $context;
+        $this->iconPickerOpen = true;
+        $this->iconPickerSearch = '';
+        $this->iconPickerTab = 'fontawesome';
+
+        if ($context === 'wallet') {
+            $this->iconPickerIconColor = $this->walletForm['icon_color'] ?? '#095C4A';
+            $this->iconPickerBackgroundColor = $this->walletForm['icon_background'] ?? '#D2F9E7';
+        } else {
+            $this->iconPickerIconColor = $this->categoryForm['icon_color'] ?? '#095C4A';
+            $this->iconPickerBackgroundColor = $this->categoryForm['icon_background'] ?? '#F6FFFA';
+        }
     }
 
-    public function closeWalletIconPicker(): void
+    public function closeIconPicker(): void
     {
-        $this->showWalletIconPicker = false;
+        $this->iconPickerOpen = false;
     }
 
-    public function selectWalletIcon(?int $iconId): void
+    public function selectIconFromPicker(?int $iconId): void
     {
-        $this->walletForm['wallet_icon_id'] = $iconId;
-        $this->showWalletIconPicker = false;
-    }
+        if ($this->iconPickerContext === 'wallet') {
+            $this->walletForm['icon_id'] = $iconId;
+            $this->walletForm['icon_color'] = $this->iconPickerIconColor;
+            $this->walletForm['icon_background'] = $this->iconPickerBackgroundColor;
+            $this->syncWalletIconPreview();
+        } else {
+            $this->categoryForm['icon_id'] = $iconId;
+            $this->categoryForm['icon_color'] = $this->iconPickerIconColor;
+            $this->categoryForm['icon_background'] = $this->iconPickerBackgroundColor;
+            $this->syncCategoryIconPreview();
+        }
 
-    public function openCategoryIconPicker(): void
-    {
-        $this->showCategoryIconPicker = true;
-    }
-
-    public function closeCategoryIconPicker(): void
-    {
-        $this->showCategoryIconPicker = false;
-    }
-
-    public function selectCategoryIcon(?int $iconId): void
-    {
-        $this->categoryForm['category_icon_id'] = $iconId;
-        $this->showCategoryIconPicker = false;
+        $this->iconPickerOpen = false;
     }
 
     public function saveCategory(): void
@@ -229,7 +247,9 @@ class SettingsHub extends Component
         $data = $this->validate([
             'categoryForm.name' => ['required', 'string', 'max:255'],
             'categoryForm.type' => ['required', Rule::in(['expense', 'income'])],
-            'categoryForm.category_icon_id' => ['required', Rule::exists('category_icons', 'id')],
+            'categoryForm.icon_id' => ['nullable', Rule::exists('icons', 'id')],
+            'categoryForm.icon_color' => ['nullable', 'string'],
+            'categoryForm.icon_background' => ['nullable', 'string'],
             'categoryForm.parent_id' => ['nullable', Rule::exists('categories', 'id')],
         ])['categoryForm'];
 
@@ -241,9 +261,12 @@ class SettingsHub extends Component
         $this->categoryForm = [
             'name' => '',
             'type' => 'expense',
-            'category_icon_id' => null,
+            'icon_id' => null,
+            'icon_color' => '#095C4A',
+            'icon_background' => '#F6FFFA',
             'parent_id' => null,
         ];
+        $this->categoryIconPreview = null;
 
         session()->flash('profile_status', 'Category saved');
     }
@@ -314,18 +337,68 @@ class SettingsHub extends Component
 
     public function render(): View
     {
+        $iconQuery = Icon::query()
+            ->where('is_active', true)
+            ->when($this->iconPickerSearch, function ($query) {
+                $query->where(function ($sub) {
+                    $sub->where('label', 'like', '%'.$this->iconPickerSearch.'%')
+                        ->orWhere('fa_class', 'like', '%'.$this->iconPickerSearch.'%');
+                });
+            })
+            ->orderBy('label');
+
+        $fontawesomeIcons = $this->iconPickerOpen
+            ? (clone $iconQuery)->where('type', 'fontawesome')->get()
+            : collect();
+
+        $customIcons = $this->iconPickerOpen
+            ? (clone $iconQuery)->where('type', 'image')->get()
+            : collect();
+
         return view('livewire.profile.settings-hub', [
-            'wallets' => Auth::user()->wallets()->latest()->get(),
+            'wallets' => Auth::user()->wallets()->with('iconDefinition')->latest()->get(),
             'labels' => Auth::user()->labels()->orderBy('name')->get(),
             'categories' => Category::query()
+                ->with(['icon'])
                 ->where(function ($query) {
                     $query->where('user_id', Auth::id())->orWhereNull('user_id');
                 })
                 ->orderBy('display_order')
                 ->get(),
-            'categoryIcons' => CategoryIcon::where('is_active', true)->orderBy('name')->get(),
-            'walletIcons' => WalletIcon::orderBy('name')->get(),
+            'iconPickerFontawesome' => $fontawesomeIcons,
+            'iconPickerCustom' => $customIcons,
             'timezones' => \DateTimeZone::listIdentifiers(),
         ]);
+    }
+
+    protected function syncWalletIconPreview(): void
+    {
+        $this->walletIconPreview = $this->buildIconPreview($this->walletForm['icon_id'] ?? null);
+    }
+
+    protected function syncCategoryIconPreview(): void
+    {
+        $this->categoryIconPreview = $this->buildIconPreview($this->categoryForm['icon_id'] ?? null);
+    }
+
+    protected function buildIconPreview(?int $iconId): ?array
+    {
+        if (! $iconId) {
+            return null;
+        }
+
+        $icon = Icon::find($iconId);
+
+        if (! $icon) {
+            return null;
+        }
+
+        return [
+            'id' => $icon->id,
+            'type' => $icon->type,
+            'fa_class' => $icon->fa_class,
+            'image_path' => $icon->image_path,
+            'label' => $icon->label,
+        ];
     }
 }

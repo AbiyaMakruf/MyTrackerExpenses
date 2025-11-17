@@ -5,23 +5,33 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class CategoryIcon extends Model
+class Icon extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'name',
-        'icon_key',
-        'icon_type',
+        'type',
+        'fa_class',
+        'image_path',
+        'label',
+        'group',
+        'created_by',
         'is_active',
-        'description',
-        'meta',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
-        'meta' => 'array',
     ];
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function wallets()
+    {
+        return $this->hasMany(Wallet::class);
+    }
 
     public function categories()
     {

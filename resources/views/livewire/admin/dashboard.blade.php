@@ -1,3 +1,5 @@
+@php use Illuminate\Support\Facades\Storage; @endphp
+
 @php
     $transactionsChart = [
         'type' => 'bar',
@@ -87,105 +89,92 @@
         </div>
     </div>
 
-    <div class="grid gap-4 md:grid-cols-2">
-        <div class="space-y-3 rounded-2xl border border-[#D2F9E7] bg-white/80 p-4">
-            <h2 class="text-lg font-semibold text-[#095C4A]">Category icons</h2>
-            <div class="space-y-2 max-h-72 overflow-y-auto">
-                @foreach ($icons as $icon)
-                    <div class="flex items-center justify-between rounded-xl bg-[#F6FFFA] px-3 py-2">
-                        <div>
-                            <p class="text-sm font-semibold">{{ $icon->name }}</p>
-                            <p class="text-xs text-slate-500">{{ $icon->icon_key }} • {{ ucfirst($icon->icon_type) }}</p>
-                        </div>
-                        <button type="button" wire:click="deleteIcon({{ $icon->id }})" class="text-xs font-semibold text-red-500">Delete</button>
-                    </div>
-                @endforeach
+    <!-- Unified Icon Manager -->
+    <div class="space-y-4 rounded-3xl border border-[#D2F9E7] bg-white/90 p-4 shadow">
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+                <h2 class="text-lg font-semibold text-[#095C4A]">Unified icon library</h2>
+                <p class="text-xs text-slate-500">Manage FontAwesome and custom icons.</p>
             </div>
+            <input type="text" wire:model.live="iconSearch" placeholder="Search icons..." class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2 text-sm md:w-72" />
         </div>
-        <form wire:submit.prevent="saveIcon" class="space-y-3 rounded-2xl border border-[#72E3BD]/60 bg-white/90 p-4">
-            <h3 class="text-base font-semibold text-[#095C4A]">Add icon</h3>
-            <div>
-                <label class="text-xs text-slate-500">Name</label>
-                <input type="text" wire:model.live="iconForm.name" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
-                @error('iconForm.name') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
-            </div>
-            <div>
-                <label class="text-xs text-slate-500">Icon key</label>
-                <input type="text" wire:model.live="iconForm.icon_key" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" placeholder="heroicon-shopping-bag or emoji" />
-                @error('iconForm.icon_key') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
-            </div>
-            <div>
-                <label class="text-xs text-slate-500">Type</label>
-                <select wire:model.live="iconForm.icon_type" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2">
-                    <option value="icon">Icon</option>
-                    <option value="emoji">Emoji</option>
-                </select>
-            </div>
-            <div>
-                <label class="text-xs text-slate-500">Description</label>
-                <textarea wire:model.live="iconForm.description" rows="2" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2"></textarea>
-            </div>
-            <button type="submit" class="btn-primary w-full">Save icon</button>
-        </form>
+        <div class="flex flex-wrap gap-2">
+            <button type="button" wire:click="$set('iconTab','fontawesome')" @class([
+                'rounded-full px-4 py-2 text-sm font-semibold',
+                'bg-[#095C4A] text-white' => $iconTab === 'fontawesome',
+                'bg-[#F2FFFA] text-[#095C4A]' => $iconTab !== 'fontawesome',
+            ])>FontAwesome</button>
+            <button type="button" wire:click="$set('iconTab','image')" @class([
+                'rounded-full px-4 py-2 text-sm font-semibold',
+                'bg-[#095C4A] text-white' => $iconTab === 'image',
+                'bg-[#F2FFFA] text-[#095C4A]' => $iconTab !== 'image',
+            ])>Custom uploads</button>
+        </div>
+        <div class="grid gap-3 md:grid-cols-4">
+            @php($iconCollection = $iconTab === 'image' ? $customIcons : $fontawesomeIcons)
+            @forelse ($iconCollection as $icon)
+                <div class="rounded-2xl border border-[#D2F9E7] bg-white p-3 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#F6FFFA] text-[#095C4A]">
+                            @if ($icon->type === 'image')
+                                <img src="{{ Storage::disk('public')->url($icon->image_path) }}" alt="{{ $icon->label }}" class="h-6 w-6 object-contain" />
+                            @else
+                                <span data-fa-icon="{{ $icon->fa_class }}" class="text-lg"></span>
+                            @endif
+                        </div>
+                        <button type="button" wire:click="toggleIcon({{ $icon->id }})" class="text-[10px] font-semibold {{ $icon->is_active ? 'text-emerald-600' : 'text-slate-400' }}">
+                            {{ $icon->is_active ? 'ACTIVE' : 'INACTIVE' }}
+                        </button>
+                    </div>
+                    <p class="mt-2 text-sm font-semibold text-[#095C4A]">{{ $icon->label }}</p>
+                    <p class="text-xs text-slate-400">{{ $icon->group ?? 'general' }}</p>
+                    @if ($icon->type === 'image')
+                        <button type="button" wire:click="deleteIcon({{ $icon->id }})" class="mt-2 text-xs font-semibold text-red-500">Delete</button>
+                    @endif
+                </div>
+            @empty
+                <p class="text-sm text-slate-400 md:col-span-4">No icons found.</p>
+            @endforelse
+        </div>
     </div>
 
     <div class="grid gap-4 md:grid-cols-2">
-        <div class="space-y-3 rounded-2xl border border-[#D2F9E7] bg-white/80 p-4">
-            <h2 class="text-lg font-semibold text-[#095C4A]">Wallet icons</h2>
-            <div class="space-y-2 max-h-72 overflow-y-auto">
-                @foreach ($walletIcons as $icon)
-                    <div class="flex items-center justify-between rounded-xl bg-[#F6FFFA] px-3 py-2">
-                        <div>
-                            <p class="text-sm font-semibold">{{ $icon->name }}</p>
-                            <p class="text-xs text-slate-500">{{ $icon->source_type === 'upload' ? 'Uploaded asset' : $icon->value }}</p>
-                        </div>
-                        <button type="button" wire:click="deleteWalletIcon({{ $icon->id }})" class="text-xs font-semibold text-red-500">Delete</button>
-                    </div>
-                @endforeach
-                @if ($walletIcons->isEmpty())
-                    <p class="text-sm text-slate-400">No wallet icons yet.</p>
-                @endif
-            </div>
-        </div>
-        <form wire:submit.prevent="saveWalletIcon" class="space-y-3 rounded-2xl border border-[#72E3BD]/60 bg-white/90 p-4">
-            <h3 class="text-base font-semibold text-[#095C4A]">Add wallet icon</h3>
+        <form wire:submit.prevent="saveFontawesomeIcon" class="space-y-3 rounded-2xl border border-[#72E3BD]/60 bg-white/90 p-4">
+            <h3 class="text-base font-semibold text-[#095C4A]">Add FontAwesome icon</h3>
             <div>
-                <label class="text-xs text-slate-500">Name</label>
-                <input type="text" wire:model.live="walletIconForm.name" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
-                @error('walletIconForm.name') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
+                <label class="text-xs text-slate-500">Label</label>
+                <input type="text" wire:model.live="fontawesomeForm.label" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                @error('fontawesomeForm.label') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
             </div>
             <div>
-                <label class="text-xs text-slate-500">Source type</label>
-                <select wire:model.live="walletIconForm.source_type" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2">
-                    <option value="class">Icon library</option>
-                    <option value="upload">Upload image</option>
-                </select>
+                <label class="text-xs text-slate-500">Icon key</label>
+                <input type="text" wire:model.live="fontawesomeForm.fa_class" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" placeholder="fas:wallet" />
+                <p class="text-[11px] text-slate-400">Format: <code>prefix:iconName</code> contoh <code>fas:wallet</code>, <code>far:calendar</code>, <code>fab:spotify</code>.</p>
+                @error('fontawesomeForm.fa_class') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
             </div>
-            @if ($walletIconForm['source_type'] === 'class')
-                <div>
-                    <label class="text-xs text-slate-500">Icon key</label>
-                    <input type="text" wire:model.live="walletIconForm.value" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" placeholder="fas:wallet (prefix:name)" />
-                    <p class="text-[11px] text-slate-400">Gunakan format <code>prefix:iconName</code>, contoh: <code>fas:wallet</code>, <code>far:calendar</code>, <code>fab:apple</code>.</p>
-                    @error('walletIconForm.value') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
-                </div>
-            @else
-                <div>
-                    <label class="text-xs text-slate-500">Upload image</label>
-                    <input type="file" wire:model="walletIconUpload" class="w-full rounded-2xl border border-dashed border-[#D2F9E7] px-3 py-2" />
-                    @error('walletIconUpload') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
-                </div>
-            @endif
-            <div class="grid gap-3 md:grid-cols-2">
-                <div>
-                    <label class="text-xs text-slate-500">Icon color</label>
-                    <input type="color" wire:model.live="walletIconForm.icon_color" class="h-10 w-full rounded-2xl border border-[#D2F9E7]" />
-                </div>
-                <div>
-                    <label class="text-xs text-slate-500">Background color</label>
-                    <input type="color" wire:model.live="walletIconForm.background_color" class="h-10 w-full rounded-2xl border border-[#D2F9E7]" />
-                </div>
+            <div>
+                <label class="text-xs text-slate-500">Group</label>
+                <input type="text" wire:model.live="fontawesomeForm.group" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
             </div>
-            <button type="submit" class="btn-primary w-full">Save wallet icon</button>
+            <button type="submit" class="btn-primary w-full">Save FontAwesome icon</button>
+        </form>
+        <form wire:submit.prevent="saveCustomIcon" class="space-y-3 rounded-2xl border border-[#72E3BD]/60 bg-white/90 p-4">
+            <h3 class="text-base font-semibold text-[#095C4A]">Upload custom icon</h3>
+            <div>
+                <label class="text-xs text-slate-500">Label</label>
+                <input type="text" wire:model.live="customIconForm.label" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                @error('customIconForm.label') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
+            </div>
+            <div>
+                <label class="text-xs text-slate-500">Group</label>
+                <input type="text" wire:model.live="customIconForm.group" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+            </div>
+            <div>
+                <label class="text-xs text-slate-500">Icon image (PNG)</label>
+                <input type="file" wire:model="iconUpload" class="w-full rounded-2xl border border-dashed border-[#D2F9E7] px-3 py-2" />
+                @error('iconUpload') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
+            </div>
+            <button type="submit" class="btn-primary w-full">Upload custom icon</button>
         </form>
     </div>
 

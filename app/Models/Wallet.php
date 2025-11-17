@@ -18,8 +18,7 @@ class Wallet extends Model
         'initial_balance',
         'current_balance',
         'is_default',
-        'wallet_icon_id',
-        'icon',
+        'icon_id',
         'icon_color',
         'icon_background',
         'meta',
@@ -46,6 +45,6 @@ class Wallet extends Model
 
     public function iconDefinition()
     {
-        return $this->belongsTo(WalletIcon::class, 'wallet_icon_id');
+        return $this->belongsTo(Icon::class, 'icon_id');
     }
 }

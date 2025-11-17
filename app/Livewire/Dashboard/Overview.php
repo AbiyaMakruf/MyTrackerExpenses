@@ -58,7 +58,7 @@ class Overview extends Component
             'recentTransactions' => (clone $transactionQuery)
                 ->latest('transaction_date')
                 ->limit(10)
-                ->with(['wallet', 'category.icon', 'subCategory.icon'])
+                ->with(['wallet.iconDefinition', 'category.icon', 'subCategory.icon'])
                 ->get(),
             'cashFlow' => [
                 'income' => (clone $transactionQuery)->where('type', 'income')->sum('amount'),

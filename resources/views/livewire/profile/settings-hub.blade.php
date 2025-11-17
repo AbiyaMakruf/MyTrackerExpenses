@@ -120,19 +120,17 @@
             <div class="space-y-2">
                 <label class="text-xs text-slate-500">Icon</label>
                 <div class="flex items-center gap-3">
-                    @php($selectedIcon = $walletIcons->firstWhere('id', $walletForm['wallet_icon_id']))
-                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#D2F9E7] bg-[#F2FFFA] text-[#095C4A]" style="background-color: {{ $walletForm['icon_background'] }}">
-                        @if ($selectedIcon && $selectedIcon->source_type === 'upload')
-                            <img src="{{ Storage::disk('public')->url($selectedIcon->value) }}" alt="{{ $selectedIcon->name }}" class="h-6 w-6 object-contain">
-                        @elseif ($selectedIcon && filled($selectedIcon->value))
-                            <span data-fa-icon="{{ $selectedIcon->value }}" class="text-lg" style="color: {{ $walletForm['icon_color'] }}"></span>
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#D2F9E7]" style="background-color: {{ $walletForm['icon_background'] ?? '#F6FFFA' }}; color: {{ $walletForm['icon_color'] ?? '#095C4A' }}">
+                        @if ($walletIconPreview && $walletIconPreview['type'] === 'image' && $walletIconPreview['image_path'])
+                            <img src="{{ Storage::disk('public')->url($walletIconPreview['image_path']) }}" alt="{{ $walletIconPreview['label'] }}" class="h-6 w-6 object-contain">
+                        @elseif ($walletIconPreview && $walletIconPreview['fa_class'])
+                            <span data-fa-icon="{{ $walletIconPreview['fa_class'] }}" class="text-lg"></span>
                         @else
                             <span class="text-xs text-slate-400">None</span>
                         @endif
                     </div>
-                    <button type="button" wire:click="openWalletIconPicker" class="rounded-full border border-[#095C4A] px-4 py-2 text-sm font-semibold text-[#095C4A]">Choose icon</button>
+                    <button type="button" wire:click="openIconPicker('wallet')" class="rounded-full border border-[#095C4A] px-4 py-2 text-sm font-semibold text-[#095C4A]">Choose icon</button>
                 </div>
-                @error('walletForm.wallet_icon_id') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
                 <div class="grid gap-3 md:grid-cols-2">
                     <div>
                         <label class="text-xs text-slate-500">Icon color</label>
@@ -143,6 +141,7 @@
                         <input type="color" wire:model.live="walletForm.icon_background" class="h-10 w-full rounded-2xl border border-[#D2F9E7]" />
                     </div>
                 </div>
+                @error('walletForm.icon_id') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
             </div>
             <label class="inline-flex items-center gap-2 text-sm text-[#095C4A]">
                 <input type="checkbox" wire:model.live="walletForm.is_default" class="rounded text-[#095C4A]" />
@@ -151,29 +150,6 @@
             <button type="submit" class="btn-primary w-full">Save wallet</button>
         </form>
     </div>
-
-    @if ($showWalletIconPicker)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div class="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-[#095C4A]">Select wallet icon</h3>
-                    <button type="button" class="text-sm font-semibold text-slate-500" wire:click="closeWalletIconPicker">Close</button>
-                </div>
-                <div class="mt-4 grid grid-cols-4 gap-4">
-                    @foreach ($walletIcons as $icon)
-                        <button type="button" wire:click="selectWalletIcon({{ $icon->id }})" class="flex flex-col items-center gap-2 rounded-2xl border border-[#D2F9E7] bg-[#F6FFFA] p-3 text-sm font-semibold text-[#095C4A]">
-                            @if ($icon->source_type === 'upload')
-                                <img src="{{ Storage::disk('public')->url($icon->value) }}" alt="{{ $icon->name }}" class="h-8 w-8 object-contain">
-                            @else
-                                <span data-fa-icon="{{ $icon->value }}" class="text-xl"></span>
-                            @endif
-                            <span>{{ $icon->name }}</span>
-                        </button>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    @endif
 
     <div class="grid gap-4 md:grid-cols-2" id="labels">
         <div class="space-y-3 rounded-2xl border border-[#D2F9E7] bg-white/80 p-4">
@@ -215,11 +191,21 @@
             <div class="space-y-2 max-h-64 overflow-y-auto">
                 @foreach ($categories->where('user_id', auth()->id()) as $category)
                     <div class="flex items-center justify-between rounded-xl bg-[#F6FFFA] px-3 py-2">
-                        <div>
-                            <p class="text-sm font-semibold">{{ $category->name }}</p>
-                            <p class="text-xs text-slate-500">{{ ucfirst($category->type) }}</p>
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/70" style="background-color: {{ $category->icon_background ?? '#F6FFFA' }}; color: {{ $category->icon_color ?? '#095C4A' }}">
+                                @if ($category->icon && $category->icon->type === 'image')
+                                    <img src="{{ Storage::disk('public')->url($category->icon->image_path) }}" alt="{{ $category->icon->label }}" class="h-6 w-6 object-contain">
+                                @elseif ($category->icon && $category->icon->fa_class)
+                                    <span data-fa-icon="{{ $category->icon->fa_class }}" class="text-lg"></span>
+                                @else
+                                    <span class="text-xs font-semibold">{{ Str::upper(Str::substr($category->name, 0, 2)) }}</span>
+                                @endif
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold">{{ $category->name }}</p>
+                                <p class="text-xs text-slate-500">{{ ucfirst($category->type) }}</p>
+                            </div>
                         </div>
-                        <span class="text-xs text-slate-400">Icon #{{ $category->category_icon_id }}</span>
                     </div>
                 @endforeach
                 @if ($categories->where('user_id', auth()->id())->isEmpty())
@@ -252,49 +238,35 @@
                     </select>
                 </div>
             </div>
-            <div>
-                <label class="text-xs text-slate-500">Icon (admin curated)</label>
-                @php($selectedCategoryIcon = $categoryIcons->firstWhere('id', $categoryForm['category_icon_id']))
+            <div class="space-y-2">
+                <label class="text-xs text-slate-500">Icon</label>
                 <div class="flex items-center gap-3">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#D2F9E7] bg-[#F6FFFA] text-[#095C4A]">
-                        @if ($selectedCategoryIcon && $selectedCategoryIcon->icon_type === 'emoji')
-                            <span class="text-2xl">{{ $selectedCategoryIcon->icon_key }}</span>
-                        @elseif ($selectedCategoryIcon && $selectedCategoryIcon->icon_key)
-                            <span class="text-base font-semibold">{{ Str::upper(Str::substr($selectedCategoryIcon->icon_key, 0, 2)) }}</span>
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#D2F9E7]" style="background-color: {{ $categoryForm['icon_background'] ?? '#F6FFFA' }}; color: {{ $categoryForm['icon_color'] ?? '#095C4A' }}">
+                        @if ($categoryIconPreview && $categoryIconPreview['type'] === 'image' && $categoryIconPreview['image_path'])
+                            <img src="{{ Storage::disk('public')->url($categoryIconPreview['image_path']) }}" alt="{{ $categoryIconPreview['label'] }}" class="h-6 w-6 object-contain">
+                        @elseif ($categoryIconPreview && $categoryIconPreview['fa_class'])
+                            <span data-fa-icon="{{ $categoryIconPreview['fa_class'] }}" class="text-lg"></span>
                         @else
                             <span class="text-xs text-slate-400">None</span>
                         @endif
                     </div>
-                    <button type="button" wire:click="openCategoryIconPicker" class="rounded-full border border-[#095C4A] px-4 py-2 text-sm font-semibold text-[#095C4A]">Choose icon</button>
+                    <button type="button" wire:click="openIconPicker('category')" class="rounded-full border border-[#095C4A] px-4 py-2 text-sm font-semibold text-[#095C4A]">Choose icon</button>
                 </div>
-                @error('categoryForm.category_icon_id') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
+                <div class="grid gap-3 md:grid-cols-2">
+                    <div>
+                        <label class="text-xs text-slate-500">Icon color</label>
+                        <input type="color" wire:model.live="categoryForm.icon_color" class="h-10 w-full rounded-2xl border border-[#D2F9E7]" />
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-500">Background color</label>
+                        <input type="color" wire:model.live="categoryForm.icon_background" class="h-10 w-full rounded-2xl border border-[#D2F9E7]" />
+                    </div>
+                </div>
+                @error('categoryForm.icon_id') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
             </div>
             <button type="submit" class="btn-primary w-full">Save category</button>
         </form>
     </div>
-
-    @if ($showCategoryIconPicker)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div class="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-[#095C4A]">Select category icon</h3>
-                    <button type="button" class="text-sm font-semibold text-slate-500" wire:click="closeCategoryIconPicker">Close</button>
-                </div>
-                <div class="mt-4 grid grid-cols-4 gap-4">
-                    @foreach ($categoryIcons as $icon)
-                        <button type="button" wire:click="selectCategoryIcon({{ $icon->id }})" class="flex flex-col items-center gap-2 rounded-2xl border border-[#D2F9E7] bg-[#F6FFFA] p-3 text-sm font-semibold text-[#095C4A]">
-                            @if ($icon->icon_type === 'emoji')
-                                <span class="text-2xl">{{ $icon->icon_key }}</span>
-                            @else
-                                <span class="text-base font-semibold">{{ Str::upper(Str::substr($icon->icon_key, 0, 2)) }}</span>
-                            @endif
-                            <span>{{ $icon->name }}</span>
-                        </button>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    @endif
 
     <div class="rounded-2xl border border-[#72E3BD]/60 bg-white/90 p-4" id="export">
         <h2 class="text-lg font-semibold text-[#095C4A]">Export data</h2>
@@ -377,4 +349,70 @@
             <button type="button" wire:click.prevent="export('pdf')" class="btn-primary bg-[#15B489]">Download PDF</button>
         </div>
     </div>
+
+    @if ($iconPickerOpen)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" wire:click.self="closeIconPicker">
+            <div class="flex w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-white/40 bg-white shadow-2xl max-h-[85vh]">
+                <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-4">
+                    <div>
+                        <p class="text-xs uppercase tracking-[0.3em] text-[#15B489]">Icon picker</p>
+                        <h3 class="text-xl font-semibold text-[#095C4A]">Choose {{ $iconPickerContext === 'wallet' ? 'wallet' : 'category' }} icon</h3>
+                    </div>
+                    <button type="button" class="rounded-full bg-[#F2FFFA] px-4 py-1 text-sm font-semibold text-[#08745C]" wire:click="closeIconPicker">Close</button>
+                </div>
+                <div class="flex flex-1 flex-col gap-4 overflow-hidden px-6 py-4">
+                    <input type="text" wire:model.live="iconPickerSearch" placeholder="Search icons..." class="w-full rounded-2xl border border-[#D2F9E7] px-4 py-2 text-sm" />
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" wire:click="$set('iconPickerTab','fontawesome')" @class([
+                            'rounded-full px-4 py-2 text-sm font-semibold transition',
+                            'bg-[#095C4A] text-white' => $iconPickerTab === 'fontawesome',
+                            'bg-[#F6FFFA] text-[#095C4A]' => $iconPickerTab !== 'fontawesome',
+                        ])>Font Awesome</button>
+                        <button type="button" wire:click="$set('iconPickerTab','image')" @class([
+                            'rounded-full px-4 py-2 text-sm font-semibold transition',
+                            'bg-[#095C4A] text-white' => $iconPickerTab === 'image',
+                            'bg-[#F6FFFA] text-[#095C4A]' => $iconPickerTab !== 'image',
+                        ])>Custom icons</button>
+                    </div>
+                    @php($pickerIcons = $iconPickerTab === 'image' ? $iconPickerCustom : $iconPickerFontawesome)
+                    @php($currentSelection = $iconPickerContext === 'wallet' ? $walletForm['icon_id'] : $categoryForm['icon_id'])
+                    <div class="flex-1 overflow-y-auto pr-1">
+                        <div class="grid gap-3 sm:grid-cols-3 md:grid-cols-4">
+                            @forelse ($pickerIcons as $icon)
+                                <button type="button" wire:click="selectIconFromPicker({{ $icon->id }})" @class([
+                                    'flex flex-col items-center gap-2 rounded-2xl border bg-[#F6FFFA] p-3 text-sm font-semibold text-[#095C4A] transition',
+                                    'border-[#095C4A] ring-2 ring-[#095C4A]/40' => $currentSelection === $icon->id,
+                                    'border-[#D2F9E7]' => $currentSelection !== $icon->id,
+                                ])>
+                                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/60 bg-white text-[#095C4A]">
+                                        @if ($icon->type === 'image')
+                                            <img src="{{ Storage::disk('public')->url($icon->image_path) }}" alt="{{ $icon->label }}" class="h-8 w-8 object-contain">
+                                        @else
+                                            <span data-fa-icon="{{ $icon->fa_class }}" class="text-xl"></span>
+                                        @endif
+                                    </div>
+                                    <span class="text-xs text-center">{{ $icon->label }}</span>
+                                </button>
+                            @empty
+                                <p class="text-sm text-slate-400 sm:col-span-3">{{ __('No icons found') }}</p>
+                            @endforelse
+                        </div>
+                    </div>
+                    <div class="grid gap-3 md:grid-cols-2">
+                        <div>
+                            <label class="text-xs text-slate-500">Icon color</label>
+                            <input type="color" wire:model.live="iconPickerIconColor" class="h-10 w-full rounded-2xl border border-[#D2F9E7]" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-500">Background color</label>
+                            <input type="color" wire:model.live="iconPickerBackgroundColor" class="h-10 w-full rounded-2xl border border-[#D2F9E7]" />
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-3 border-t border-slate-100 px-6 py-4">
+                    <button type="button" class="text-sm font-semibold text-slate-500" wire:click="closeIconPicker">Cancel</button>
+                </div>
+            </div>
+        </div>
+    @endif
 </section>
