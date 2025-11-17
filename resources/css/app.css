@@ -1,0 +1,62 @@
+@import 'tailwindcss';
+@import '../../vendor/livewire/flux/dist/flux.css';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../vendor/livewire/flux-pro/stubs/**/*.blade.php';
+@source '../../vendor/livewire/flux/stubs/**/*.blade.php';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --font-sans: 'Inter', 'Nunito', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-brand-primary: #095C4A;
+    --color-brand-secondary: #08745C;
+    --color-brand-accent: #15B489;
+    --color-brand-accent-light: #72E3BD;
+    --color-brand-soft: #D2F9E7;
+    --color-accent: var(--color-brand-primary);
+    --color-accent-content: var(--color-white);
+    --color-accent-foreground: var(--color-brand-primary);
+}
+
+:root {
+    font-family: var(--font-sans);
+    background-color: var(--color-brand-soft);
+}
+
+@layer base {
+    body {
+        @apply text-slate-900;
+    }
+
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-brand-soft, currentColor);
+    }
+}
+
+[data-flux-field]:not(ui-radio, ui-checkbox) {
+    @apply grid gap-2;
+}
+
+[data-flux-label] {
+    @apply !mb-0 !leading-tight;
+}
+
+input:focus[data-flux-control],
+textarea:focus[data-flux-control],
+select:focus[data-flux-control] {
+    @apply outline-hidden ring-2 ring-[--color-brand-accent] ring-offset-2 ring-offset-white;
+}
+
+.btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-[#095C4A] px-4 py-2 text-sm font-semibold text-white shadow-md shadow-[#095C4A]/30 transition hover:scale-[1.01];
+}
+
+.glass-card {
+    @apply rounded-3xl border border-white/60 bg-white/80 p-4 shadow-lg shadow-[#08745C]/10 backdrop-blur;
+}
