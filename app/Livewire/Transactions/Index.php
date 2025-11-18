@@ -117,6 +117,8 @@ class Index extends Component
 
         $labels = Auth::user()->labels()->orderBy('name')->get();
 
+        $this->dispatch('refresh-charts');
+
         return view('livewire.transactions.index', [
             'transactions' => $transactions,
             'trend' => $trend,

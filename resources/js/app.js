@@ -198,3 +198,4 @@ document.addEventListener('livewire:init', registerLivewireHooks);
 document.addEventListener('livewire:navigated', bootInteractive);
 document.addEventListener('livewire:update', () => requestAnimationFrame(renderFontAwesome));
 document.addEventListener('refresh-fontawesome', () => requestAnimationFrame(renderFontAwesome));
+document.addEventListener('refresh-charts', () => requestAnimationFrame(bootCharts));
