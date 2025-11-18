@@ -54,6 +54,7 @@ class Overview extends Component
 
         return view('livewire.dashboard.overview', [
             'wallets' => $wallets,
+            'walletTotal' => $wallets->sum('current_balance'),
             'walletGroups' => $this->groupWallets($wallets),
             'recentTransactions' => (clone $transactionQuery)
                 ->latest('transaction_date')

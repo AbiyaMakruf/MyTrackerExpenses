@@ -104,3 +104,6 @@ The repository ships with a CI workflow (`.github/workflows/ci.yml`) that instal
 | `npm run lint` | Run linting (if configured) |
 
 Feel free to open issues or PRs for enhancements, bug fixes, or additional documentation.
+
+docker build -t asia-southeast1-docker.pkg.dev/tracker-expenses-478512/my-expenses/app:latest .
+docker push asia-southeast1-docker.pkg.dev/tracker-expenses-478512/my-expenses/app:latest

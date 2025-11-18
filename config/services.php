@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'gcs' => [
+        'project_id' => env('GOOGLE_CLOUD_PROJECT_ID'),
+        'bucket' => env('GOOGLE_CLOUD_STORAGE_BUCKET', 'tracker-expenses'),
+        'client_email' => env('GOOGLE_CLOUD_CLIENT_EMAIL'),
+        'private_key' => env('GOOGLE_CLOUD_PRIVATE_KEY'),
+    ],
+
 ];

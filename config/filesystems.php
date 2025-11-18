@@ -15,6 +15,8 @@ return [
 
     'default' => env('FILESYSTEM_DISK', 'local'),
 
+    'icons_disk' => env('ICON_STORAGE_DISK', 'public'),
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
@@ -58,6 +60,14 @@ return [
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => false,
             'report' => false,
+        ],
+
+        'gcs' => [
+            'driver' => 'gcs',
+            'project_id' => env('GOOGLE_CLOUD_PROJECT_ID'),
+            'bucket' => env('GOOGLE_CLOUD_STORAGE_BUCKET', 'tracker-expenses'),
+            'client_email' => env('GOOGLE_CLOUD_CLIENT_EMAIL'),
+            'private_key' => env('GOOGLE_CLOUD_PRIVATE_KEY'),
         ],
 
     ],

@@ -63,10 +63,6 @@ const initPickers = () => {
 
 const renderFontAwesome = () => {
     document.querySelectorAll('[data-fa-icon]').forEach((el) => {
-        if (el.dataset.faRendered === 'true') {
-            return;
-        }
-
         const value = el.dataset.faIcon;
         if (!value) {
             return;
@@ -90,10 +86,11 @@ const renderFontAwesome = () => {
                 classes: (el.dataset.faClasses || '').split(' ').filter(Boolean),
             });
 
-            el.innerHTML = '';
             if (rendered && rendered.node[0]) {
+                el.innerHTML = '';
                 el.appendChild(rendered.node[0]);
-                el.dataset.faRendered = 'true';
+            } else {
+                el.innerHTML = '';
             }
         } catch (error) {
             console.warn('Failed to render icon', value, error);
@@ -178,9 +175,26 @@ const bootInteractive = () => {
     bootMoneyMask();
 };
 
-document.addEventListener('DOMContentLoaded', bootInteractive);
-document.addEventListener('livewire:navigated', bootInteractive);
+const registerLivewireHooks = () => {
+    if (window.__interactiveHookAttached) {
+        return;
+    }
 
-document.addEventListener('livewire:init', () => {
-    Livewire.hook('message.processed', bootInteractive);
+    if (typeof window.Livewire?.hook === 'function') {
+        window.Livewire.hook('message.processed', () => {
+            requestAnimationFrame(bootInteractive);
+        });
+        window.__interactiveHookAttached = true;
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    bootInteractive();
+    registerLivewireHooks();
 });
+
+document.addEventListener('livewire:initialized', registerLivewireHooks);
+document.addEventListener('livewire:init', registerLivewireHooks);
+document.addEventListener('livewire:navigated', bootInteractive);
+document.addEventListener('livewire:update', () => requestAnimationFrame(renderFontAwesome));
+document.addEventListener('refresh-fontawesome', () => requestAnimationFrame(renderFontAwesome));

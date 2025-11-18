@@ -58,9 +58,11 @@ RUN composer install --no-dev --optimize-autoloader
 COPY ./docker/custom.ini /usr/local/etc/php/conf.d/custom-upload-limits.ini
 
 # Optimize Laravel
+RUN php artisan config:clear && php artisan cache:clear
 
-# Set permissions
-RUN chown -R www-data:www-data storage bootstrap/cache
+# Link storage and set permissions
+RUN php artisan storage:link \
+    && chown -R www-data:www-data storage bootstrap/cache
 
 # Copy Nginx & Supervisor config
 COPY ./docker/nginx.conf /etc/nginx/nginx.conf

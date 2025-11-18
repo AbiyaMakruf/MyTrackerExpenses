@@ -22,3 +22,4 @@ yarn-error.log
 /.vscode
 /.zed
 tracker-expenses-478512-3f7a176c0958.json
+cloudrun.env

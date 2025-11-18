@@ -5,9 +5,11 @@ namespace App\Livewire\Admin;
 use App\Models\Icon;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\GoogleCloudStorage;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -74,12 +76,21 @@ class Dashboard extends Component
             'iconUpload' => ['required', 'image', 'max:1024'],
         ]);
 
-        $path = $this->iconUpload->store('icons/custom', 'public');
+        $filename = Str::uuid()->toString().'.'.$this->iconUpload->getClientOriginalExtension();
+        $relativePath = 'icons/custom/'.$filename;
+        $disk = config('filesystems.icons_disk', 'public');
+
+        if ($disk === 'gcs') {
+            app(GoogleCloudStorage::class)->upload($this->iconUpload, $relativePath);
+        } else {
+            $this->iconUpload->storeAs('icons/custom', $filename, $disk);
+        }
 
         Icon::create([
             'type' => 'image',
             'label' => $this->customIconForm['label'],
-            'image_path' => $path,
+            'image_path' => $relativePath,
+            'image_disk' => $disk,
             'group' => $this->customIconForm['group'],
             'created_by' => auth()->id(),
             'is_active' => true,
@@ -99,7 +110,7 @@ class Dashboard extends Component
         $icon = Icon::findOrFail($iconId);
 
         if ($icon->type === 'image' && $icon->image_path) {
-            Storage::disk('public')->delete($icon->image_path);
+            $this->deleteIconFile($icon);
         }
 
         $icon->wallets()->update(['icon_id' => null]);
@@ -107,6 +118,23 @@ class Dashboard extends Component
 
         $icon->delete();
         session()->flash('admin_status', 'Icon deleted');
+    }
+
+    protected function deleteIconFile(Icon $icon): void
+    {
+        $disk = $icon->image_disk ?: config('filesystems.icons_disk', 'public');
+
+        if ($disk === 'gcs') {
+            try {
+                app(GoogleCloudStorage::class)->delete($icon->image_path);
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+
+            return;
+        }
+
+        Storage::disk($disk)->delete($icon->image_path);
     }
 
     public function toggleIcon(int $iconId): void
@@ -148,6 +176,8 @@ class Dashboard extends Component
 
         $fontawesomeIcons = (clone $iconsQuery)->where('type', 'fontawesome')->get();
         $customIcons = (clone $iconsQuery)->where('type', 'image')->get();
+
+        $this->dispatch('refresh-fontawesome');
 
         return view('livewire.admin.dashboard', [
             'stats' => $stats,

@@ -63,6 +63,8 @@ class SettingsHub extends Component
 
     public ?array $walletIconPreview = null;
     public ?array $categoryIconPreview = null;
+    public ?int $editingWalletId = null;
+    public ?int $editingCategoryId = null;
 
     public array $exportForm = [
         'format' => 'csv',
@@ -88,8 +90,6 @@ class SettingsHub extends Component
             'timezone' => $user->timezone,
         ];
 
-        $this->walletForm['currency'] = $user->base_currency;
-
         $this->labelPalette = [
             '#095C4A', '#08745C', '#15B489', '#72E3BD', '#0F172A',
             '#1D4ED8', '#2563EB', '#38BDF8', '#F97316', '#EA580C',
@@ -99,6 +99,8 @@ class SettingsHub extends Component
 
         $this->labelForm['color'] = $this->labelPalette[0];
 
+        $this->resetWalletForm();
+        $this->resetCategoryForm();
         $this->syncWalletIconPreview();
         $this->syncCategoryIconPreview();
     }
@@ -139,46 +141,91 @@ class SettingsHub extends Component
 
     public function saveWallet(): void
     {
-        $data = $this->validate([
+        $rules = [
             'walletForm.name' => ['required', 'string', 'max:255'],
             'walletForm.type' => ['required', Rule::in(config('myexpenses.wallets.types'))],
             'walletForm.currency' => ['required', Rule::in(config('myexpenses.currency.supported'))],
-            'walletForm.initial_balance' => ['required', 'numeric', 'min:0'],
             'walletForm.is_default' => ['boolean'],
             'walletForm.icon_id' => ['nullable', Rule::exists('icons', 'id')],
             'walletForm.icon_color' => ['nullable', 'string'],
             'walletForm.icon_background' => ['nullable', 'string'],
-        ])['walletForm'];
+        ];
 
-        $wallet = Wallet::create([
-            ...$data,
-            'user_id' => Auth::id(),
-            'current_balance' => $data['initial_balance'],
-        ]);
-
-        if ($data['is_default']) {
-            Auth::user()->update(['default_wallet_id' => $wallet->id]);
+        if ($this->editingWalletId) {
+            $rules['walletForm.initial_balance'] = ['nullable', 'numeric', 'min:0'];
+        } else {
+            $rules['walletForm.initial_balance'] = ['required', 'numeric', 'min:0'];
         }
 
-        $this->walletForm = [
-            'name' => '',
-            'type' => 'bank',
-            'currency' => Auth::user()->base_currency,
-            'initial_balance' => null,
-            'is_default' => false,
-            'icon_id' => null,
-            'icon_color' => '#095C4A',
-            'icon_background' => '#D2F9E7',
-        ];
-        $this->walletIconPreview = null;
+        $data = $this->validate($rules)['walletForm'];
 
-        session()->flash('profile_status', 'Wallet added');
+        if ($this->editingWalletId) {
+            $wallet = Wallet::where('user_id', Auth::id())->findOrFail($this->editingWalletId);
+            $wallet->update([
+                'name' => $data['name'],
+                'type' => $data['type'],
+                'currency' => $data['currency'],
+                'icon_id' => $data['icon_id'],
+                'icon_color' => $data['icon_color'] ?: '#095C4A',
+                'icon_background' => $data['icon_background'] ?: '#D2F9E7',
+            ]);
+
+            if ($data['is_default']) {
+                Auth::user()->update(['default_wallet_id' => $wallet->id]);
+            }
+
+            $message = 'Wallet updated';
+        } else {
+            $wallet = Wallet::create([
+                ...$data,
+                'user_id' => Auth::id(),
+                'icon_color' => $data['icon_color'] ?: '#095C4A',
+                'icon_background' => $data['icon_background'] ?: '#D2F9E7',
+                'current_balance' => $data['initial_balance'],
+            ]);
+
+            if ($data['is_default']) {
+                Auth::user()->update(['default_wallet_id' => $wallet->id]);
+            }
+
+            $message = 'Wallet added';
+        }
+
+        $this->resetWalletForm();
+        session()->flash('profile_status', $message);
     }
 
     public function deleteWallet(int $walletId): void
     {
         Wallet::where('user_id', Auth::id())->where('id', $walletId)->delete();
+        if ($this->editingWalletId === $walletId) {
+            $this->resetWalletForm();
+        }
         session()->flash('profile_status', 'Wallet deleted');
+    }
+
+    public function editWallet(int $walletId): void
+    {
+        $wallet = Wallet::where('user_id', Auth::id())->with('iconDefinition')->findOrFail($walletId);
+
+        $this->editingWalletId = $wallet->id;
+        $this->walletForm = [
+            'name' => $wallet->name,
+            'type' => $wallet->type,
+            'currency' => $wallet->currency,
+            'initial_balance' => $wallet->initial_balance,
+            'is_default' => $wallet->is_default,
+            'icon_id' => $wallet->icon_id,
+            'icon_color' => $wallet->icon_color ?: '#095C4A',
+            'icon_background' => $wallet->icon_background ?: '#D2F9E7',
+        ];
+
+        $this->syncWalletIconPreview();
+    }
+
+    public function cancelWalletEdit(): void
+    {
+        $this->resetWalletForm();
     }
 
     public function saveLabel(): void
@@ -253,22 +300,51 @@ class SettingsHub extends Component
             'categoryForm.parent_id' => ['nullable', Rule::exists('categories', 'id')],
         ])['categoryForm'];
 
-        Category::create([
-            ...$data,
-            'user_id' => Auth::id(),
-        ]);
+        if ($this->editingCategoryId) {
+            $category = Category::where('user_id', Auth::id())->findOrFail($this->editingCategoryId);
+            $category->update([
+                'name' => $data['name'],
+                'type' => $data['type'],
+                'icon_id' => $data['icon_id'],
+                'icon_color' => $data['icon_color'] ?: '#095C4A',
+                'icon_background' => $data['icon_background'] ?: '#F6FFFA',
+                'parent_id' => $data['parent_id'],
+            ]);
+            $message = 'Category updated';
+        } else {
+            Category::create([
+                ...$data,
+                'user_id' => Auth::id(),
+                'icon_color' => $data['icon_color'] ?: '#095C4A',
+                'icon_background' => $data['icon_background'] ?: '#F6FFFA',
+            ]);
+            $message = 'Category saved';
+        }
 
+        $this->resetCategoryForm();
+        session()->flash('profile_status', $message);
+    }
+
+    public function editCategory(int $categoryId): void
+    {
+        $category = Category::where('user_id', Auth::id())->with('icon')->findOrFail($categoryId);
+
+        $this->editingCategoryId = $category->id;
         $this->categoryForm = [
-            'name' => '',
-            'type' => 'expense',
-            'icon_id' => null,
-            'icon_color' => '#095C4A',
-            'icon_background' => '#F6FFFA',
-            'parent_id' => null,
+            'name' => $category->name,
+            'type' => $category->type,
+            'icon_id' => $category->icon_id,
+            'icon_color' => $category->icon_color ?: '#095C4A',
+            'icon_background' => $category->icon_background ?: '#F6FFFA',
+            'parent_id' => $category->parent_id,
         ];
-        $this->categoryIconPreview = null;
 
-        session()->flash('profile_status', 'Category saved');
+        $this->syncCategoryIconPreview();
+    }
+
+    public function cancelCategoryEdit(): void
+    {
+        $this->resetCategoryForm();
     }
 
     public function export(string $format = 'csv')
@@ -355,16 +431,35 @@ class SettingsHub extends Component
             ? (clone $iconQuery)->where('type', 'image')->get()
             : collect();
 
+        $this->dispatch('refresh-fontawesome');
+
+        $categories = Category::query()
+            ->with(['icon'])
+            ->where(function ($query) {
+                $query->where('user_id', Auth::id())->orWhereNull('user_id');
+            })
+            ->orderBy('display_order')
+            ->get();
+
+        $ownedCategories = $categories->where('user_id', Auth::id());
+        $referencedParentIds = $ownedCategories->whereNotNull('parent_id')->pluck('parent_id')->unique();
+        $referencedParents = $categories->whereIn('id', $referencedParentIds);
+        $hierarchyParents = $ownedCategories->whereNull('parent_id')
+            ->merge($referencedParents)
+            ->unique('id');
+
+        $categoryHierarchy = $hierarchyParents->map(function ($parent) use ($ownedCategories) {
+            return [
+                'parent' => $parent,
+                'children' => $ownedCategories->where('parent_id', $parent->id),
+            ];
+        })->values();
+
         return view('livewire.profile.settings-hub', [
             'wallets' => Auth::user()->wallets()->with('iconDefinition')->latest()->get(),
             'labels' => Auth::user()->labels()->orderBy('name')->get(),
-            'categories' => Category::query()
-                ->with(['icon'])
-                ->where(function ($query) {
-                    $query->where('user_id', Auth::id())->orWhereNull('user_id');
-                })
-                ->orderBy('display_order')
-                ->get(),
+            'categories' => $categories,
+            'categoryHierarchy' => $categoryHierarchy,
             'iconPickerFontawesome' => $fontawesomeIcons,
             'iconPickerCustom' => $customIcons,
             'timezones' => \DateTimeZone::listIdentifiers(),
@@ -398,7 +493,38 @@ class SettingsHub extends Component
             'type' => $icon->type,
             'fa_class' => $icon->fa_class,
             'image_path' => $icon->image_path,
+            'image_url' => $icon->image_url,
             'label' => $icon->label,
         ];
+    }
+
+    protected function resetCategoryForm(): void
+    {
+        $this->editingCategoryId = null;
+        $this->categoryForm = [
+            'name' => '',
+            'type' => 'expense',
+            'icon_id' => null,
+            'icon_color' => '#095C4A',
+            'icon_background' => '#F6FFFA',
+            'parent_id' => null,
+        ];
+        $this->categoryIconPreview = null;
+    }
+
+    protected function resetWalletForm(): void
+    {
+        $this->editingWalletId = null;
+        $this->walletForm = [
+            'name' => '',
+            'type' => 'bank',
+            'currency' => Auth::user()->base_currency,
+            'initial_balance' => null,
+            'is_default' => false,
+            'icon_id' => null,
+            'icon_color' => '#095C4A',
+            'icon_background' => '#D2F9E7',
+        ];
+        $this->walletIconPreview = null;
     }
 }

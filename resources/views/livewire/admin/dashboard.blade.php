@@ -1,5 +1,3 @@
-@php use Illuminate\Support\Facades\Storage; @endphp
-
 @php
     $transactionsChart = [
         'type' => 'bar',
@@ -116,8 +114,8 @@
                 <div class="rounded-2xl border border-[#D2F9E7] bg-white p-3 shadow-sm">
                     <div class="flex items-center justify-between">
                         <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#F6FFFA] text-[#095C4A]">
-                            @if ($icon->type === 'image')
-                                <img src="{{ Storage::disk('public')->url($icon->image_path) }}" alt="{{ $icon->label }}" class="h-6 w-6 object-contain" />
+                            @if ($icon->type === 'image' && $icon->image_url)
+                                <img src="{{ $icon->image_url }}" alt="{{ $icon->label }}" class="h-6 w-6 object-contain" />
                             @else
                                 <span data-fa-icon="{{ $icon->fa_class }}" class="text-lg"></span>
                             @endif

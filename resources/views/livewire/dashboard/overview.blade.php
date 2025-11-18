@@ -1,4 +1,4 @@
-@php use Illuminate\Support\Facades\Storage; use Illuminate\Support\Str; @endphp
+@php use Illuminate\Support\Str; @endphp
 
 <section class="glass-card">
     <div class="flex flex-col gap-3">
@@ -38,6 +38,10 @@
 
             <div class="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-inner">
                 <p class="text-xs uppercase tracking-wide text-slate-500">Wallet overview</p>
+                <div class="mt-2 rounded-2xl bg-[#F6FFFA] px-3 py-3">
+                    <p class="text-[11px] uppercase tracking-wide text-slate-500">Total balance</p>
+                    <p class="text-2xl font-semibold text-[#08745C] mt-1">{{ number_format($walletTotal, 0) }} {{ auth()->user()->base_currency }}</p>
+                </div>
                 <div class="mt-3 space-y-4">
                     @foreach ($walletGroups as $group => $items)
                         <div>
@@ -52,8 +56,8 @@
                                     <div class="flex items-center justify-between rounded-xl border border-[#D2F9E7] bg-white px-3 py-2 shadow-sm">
                                         <div class="flex items-center gap-3">
                                             <div class="flex h-10 w-10 items-center justify-center rounded-2xl" style="background-color: {{ $bg }}; color: {{ $color }}">
-                                                @if ($icon && $icon->type === 'image' && $icon->image_path)
-                                                    <img src="{{ Storage::disk('public')->url($icon->image_path) }}" alt="{{ $icon->label }}" class="h-6 w-6 object-contain">
+                                                @if ($icon && $icon->type === 'image' && $icon->image_url)
+                                                    <img src="{{ $icon->image_url }}" alt="{{ $icon->label }}" class="h-6 w-6 object-contain">
                                                 @elseif ($icon && $icon->fa_class)
                                                     <span data-fa-icon="{{ $icon->fa_class }}" class="text-lg"></span>
                                                 @else
@@ -309,8 +313,8 @@
                 @endphp
                 <a href="{{ route('transactions.show', $transaction) }}" class="flex items-center gap-4 rounded-2xl border border-[#E2F5ED] bg-white px-3 py-3 shadow-sm transition-all duration-200 ease-out hover:scale-[1.01]">
                     <div class="flex h-12 w-12 items-center justify-center rounded-2xl" style="background-color: {{ $iconBg }}; color: {{ $iconColor }}">
-                        @if ($iconDef && $iconDef->type === 'image' && $iconDef->image_path)
-                            <img src="{{ Storage::disk('public')->url($iconDef->image_path) }}" alt="{{ $iconDef->label }}" class="h-8 w-8 object-contain">
+                        @if ($iconDef && $iconDef->type === 'image' && $iconDef->image_url)
+                            <img src="{{ $iconDef->image_url }}" alt="{{ $iconDef->label }}" class="h-8 w-8 object-contain">
                         @elseif ($iconDef && $iconDef->fa_class)
                             <span data-fa-icon="{{ $iconDef->fa_class }}" class="text-lg"></span>
                         @else
