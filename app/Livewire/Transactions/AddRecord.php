@@ -59,32 +59,36 @@ class AddRecord extends Component
 
     public ?Transaction $editingTransaction = null;
 
-    public function mount(Transaction $transaction = null): void
+    public function mount($record = null): void
     {
-        if ($transaction && $transaction->exists) {
-            if ($transaction->user_id !== Auth::id()) {
+        if ($record && !($record instanceof Transaction)) {
+            $record = Transaction::find($record);
+        }
+
+        if ($record && $record instanceof Transaction && $record->exists) {
+            if ($record->user_id !== Auth::id()) {
                 abort(403);
             }
             
-            $this->editingTransaction = $transaction;
-            $this->editingTransactionId = $transaction->id;
-            $this->mode = $transaction->type;
+            $this->editingTransaction = $record;
+            $this->editingTransactionId = $record->id;
+            $this->mode = $record->type;
             
             if ($this->mode === 'transfer') {
-                $this->wallet_id = $transaction->wallet_id;
-                $this->to_wallet_id = $transaction->to_wallet_id;
-                $this->transfer_amount = $transaction->amount;
-                $this->transfer_date = $transaction->transaction_date->format('Y-m-d\TH:i');
-                $this->transfer_note = $transaction->note;
+                $this->wallet_id = $record->wallet_id;
+                $this->to_wallet_id = $record->to_wallet_id;
+                $this->transfer_amount = $record->amount;
+                $this->transfer_date = $record->transaction_date->format('Y-m-d\TH:i');
+                $this->transfer_note = $record->note;
             } else {
-                $this->amount = $transaction->amount;
-                $this->wallet_id = $transaction->wallet_id;
-                $this->category_id = $transaction->category_id;
-                $this->sub_category_id = $transaction->sub_category_id;
-                $this->payment_type = $transaction->payment_type;
-                $this->transaction_date = $transaction->transaction_date->format('Y-m-d\TH:i');
-                $this->note = $transaction->note;
-                $this->labelIds = $transaction->labels->pluck('id')->toArray();
+                $this->amount = $record->amount;
+                $this->wallet_id = $record->wallet_id;
+                $this->category_id = $record->category_id;
+                $this->sub_category_id = $record->sub_category_id;
+                $this->payment_type = $record->payment_type;
+                $this->transaction_date = $record->transaction_date->format('Y-m-d\TH:i');
+                $this->note = $record->note;
+                $this->labelIds = $record->labels->pluck('id')->toArray();
             }
         } else {
             $this->transaction_date = now()->format('Y-m-d\TH:i');

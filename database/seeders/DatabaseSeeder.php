@@ -38,32 +38,49 @@ class DatabaseSeeder extends Seeder
             ['label' => 'Sack Dollar', 'group' => 'finance', 'fa_class' => 'fas:sack-dollar'],
             ['label' => 'Credit Card', 'group' => 'finance', 'fa_class' => 'far:credit-card'],
             ['label' => 'Piggy Bank', 'group' => 'finance', 'fa_class' => 'fas:piggy-bank'],
+            ['label' => 'Banknote', 'group' => 'finance', 'fa_class' => 'fas:banknote'],
+            ['label' => 'Dollar Sign', 'group' => 'finance', 'fa_class' => 'fas:dollar-sign'],
+            ['label' => 'Cash Register', 'group' => 'finance', 'fa_class' => 'fas:cash-register'],
             // Banks
             ['label' => 'Building Columns', 'group' => 'banks', 'fa_class' => 'fas:building-columns'],
             ['label' => 'Bank', 'group' => 'banks', 'fa_class' => 'fas:bank'],
             ['label' => 'Vault', 'group' => 'banks', 'fa_class' => 'fas:vault'],
+            ['label' => 'Cash', 'group' => 'banks', 'fa_class' => 'fas:cash'],
             // Shopping
             ['label' => 'Cart Shopping', 'group' => 'shopping', 'fa_class' => 'fas:cart-shopping'],
             ['label' => 'Basket', 'group' => 'shopping', 'fa_class' => 'fas:basket-shopping'],
             ['label' => 'Store', 'group' => 'shopping', 'fa_class' => 'fas:store'],
             ['label' => 'Tags', 'group' => 'shopping', 'fa_class' => 'fas:tags'],
+            ['label' => 'Tag', 'group' => 'shopping', 'fa_class' => 'fas:tag'],
+            ['label' => 'Receipt', 'group' => 'shopping', 'fa_class' => 'fas:receipt'],
             // Food
             ['label' => 'Utensils', 'group' => 'food', 'fa_class' => 'fas:utensils'],
             ['label' => 'Burger', 'group' => 'food', 'fa_class' => 'fas:burger'],
             ['label' => 'Mug Hot', 'group' => 'food', 'fa_class' => 'fas:mug-hot'],
             ['label' => 'Wine Glass', 'group' => 'food', 'fa_class' => 'fas:wine-glass'],
+            ['label' => 'Pizza', 'group' => 'food', 'fa_class' => 'fas:pizza'],
+            ['label' => 'Apple', 'group' => 'food', 'fa_class' => 'fas:apple-alt'],
+            ['label' => 'Coffee', 'group' => 'food', 'fa_class' => 'fas:coffee'],
+            // Health
             ['label' => 'Heart Pulse', 'group' => 'health', 'fa_class' => 'fas:heart-pulse'],
-            ['label' => 'Gifts', 'group' => 'general', 'fa_class' => 'fas:gifts'],
+            ['label' => 'Stethoscope', 'group' => 'health', 'fa_class' => 'fas:stethoscope'],
+            ['label' => 'Hospital', 'group' => 'health', 'fa_class' => 'fas:hospital'],
+            ['label' => 'User Doctor', 'group' => 'health', 'fa_class' => 'fas:user-md'],
             // Transportation
             ['label' => 'Car', 'group' => 'transport', 'fa_class' => 'fas:car'],
             ['label' => 'Motorcycle', 'group' => 'transport', 'fa_class' => 'fas:motorcycle'],
             ['label' => 'Bus', 'group' => 'transport', 'fa_class' => 'fas:bus'],
             ['label' => 'Gas Pump', 'group' => 'transport', 'fa_class' => 'fas:gas-pump'],
+            ['label' => 'Bicycle', 'group' => 'transport', 'fa_class' => 'fas:bicycle'],
+            ['label' => 'Taxi', 'group' => 'transport', 'fa_class' => 'fas:taxi'],
             // Bills & Utilities
             ['label' => 'Invoice', 'group' => 'bills', 'fa_class' => 'fas:file-invoice'],
             ['label' => 'Bolt', 'group' => 'bills', 'fa_class' => 'fas:bolt'],
             ['label' => 'Water', 'group' => 'bills', 'fa_class' => 'fas:water'],
             ['label' => 'Receipt', 'group' => 'bills', 'fa_class' => 'fas:receipt'],
+            ['label' => 'Electricity', 'group' => 'bills', 'fa_class' => 'fas:lightbulb'],
+            ['label' => 'Gas', 'group' => 'bills', 'fa_class' => 'fas:gas'],
+            ['label' => 'Dollar Sign', 'group' => 'bills', 'fa_class' => 'fas:dollar-sign'],
             // Subscriptions
             ['label' => 'Cloud', 'group' => 'subscriptions', 'fa_class' => 'fas:cloud'],
             ['label' => 'TV', 'group' => 'subscriptions', 'fa_class' => 'fas:tv'],
@@ -71,15 +88,20 @@ class DatabaseSeeder extends Seeder
             ['label' => 'Spotify', 'group' => 'subscriptions', 'fa_class' => 'fab:spotify'],
             ['label' => 'Disney', 'group' => 'subscriptions', 'fa_class' => 'fab:disney'],
             ['label' => 'Wifi', 'group' => 'subscriptions', 'fa_class' => 'fas:wifi'],
+            ['label' => 'Phone', 'group' => 'subscriptions', 'fa_class' => 'fas:phone'],
             // Income
             ['label' => 'Briefcase', 'group' => 'income', 'fa_class' => 'fas:briefcase'],
             ['label' => 'Chart Line', 'group' => 'income', 'fa_class' => 'fas:chart-line'],
             ['label' => 'Dollar Slot', 'group' => 'income', 'fa_class' => 'fas:circle-dollar-to-slot'],
+            ['label' => 'Money Check', 'group' => 'income', 'fa_class' => 'fas:money-check'],
             // General
             ['label' => 'Tag', 'group' => 'general', 'fa_class' => 'fas:tag'],
             ['label' => 'List', 'group' => 'general', 'fa_class' => 'fas:list'],
             ['label' => 'Box', 'group' => 'general', 'fa_class' => 'fas:box'],
             ['label' => 'Circle', 'group' => 'general', 'fa_class' => 'fas:circle'],
+            ['label' => 'Home', 'group' => 'general', 'fa_class' => 'fas:home'],
+            ['label' => 'Calendar', 'group' => 'general', 'fa_class' => 'fas:calendar'],
+            ['label' => 'Location', 'group' => 'general', 'fa_class' => 'fas:location-arrow'],
         ];
 
         foreach ($icons as $icon) {
@@ -94,6 +116,7 @@ class DatabaseSeeder extends Seeder
             );
         }
     }
+
 
     protected function seedDefaultCategories(): void
     {
@@ -139,6 +162,7 @@ class DatabaseSeeder extends Seeder
         $user = User::factory()->create([
             'name' => 'Demo User',
             'email' => 'demo@myexpenses.test',
+            'password' => Hash::make('Abiyajr11'),
         ]);
 
         $walletIcon = Icon::where('fa_class', 'fas:wallet')->first();
