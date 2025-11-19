@@ -36,9 +36,8 @@ const bootCharts = () => {
 const initPickers = () => {
     document.querySelectorAll('[data-datepicker]').forEach((input) => {
         if (input._flatpickr) {
-            return;
+            input._flatpickr.destroy();
         }
-
         flatpickr(input, {
             dateFormat: 'Y-m-d',
             disableMobile: true,
@@ -48,9 +47,8 @@ const initPickers = () => {
 
     document.querySelectorAll('[data-datetimepicker]').forEach((input) => {
         if (input._flatpickr) {
-            return;
+            input._flatpickr.destroy();
         }
-
         flatpickr(input, {
             enableTime: true,
             dateFormat: "Y-m-d\\TH:i",
@@ -181,8 +179,10 @@ const registerLivewireHooks = () => {
     }
 
     if (typeof window.Livewire?.hook === 'function') {
-        window.Livewire.hook('message.processed', () => {
-            requestAnimationFrame(bootInteractive);
+        window.Livewire.hook('commit', ({ succeed }) => {
+            succeed(() => {
+                requestAnimationFrame(bootInteractive);
+            });
         });
         window.__interactiveHookAttached = true;
     }

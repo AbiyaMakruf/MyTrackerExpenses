@@ -62,8 +62,10 @@
                         @error('plannedPaymentForm.amount') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label class="text-xs text-slate-500">Due date</label>
+                    <label class="text-xs text-slate-500">Due date</label>
+                    <div wire:ignore>
                         <input type="text" data-datepicker wire:model.live="plannedPaymentForm.due_date" readonly class="w-full cursor-pointer rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                    </div>
                         @error('plannedPaymentForm.due_date') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                 </div>
@@ -167,12 +169,16 @@
                 </div>
                 <div class="grid gap-3 md:grid-cols-2">
                     <div>
-                        <label class="text-xs text-slate-500">Start date</label>
+                    <label class="text-xs text-slate-500">Start date</label>
+                    <div wire:ignore>
                         <input type="text" data-datepicker wire:model.live="budgetForm.start_date" readonly class="w-full cursor-pointer rounded-2xl border border-[#D2F9E7] px-3 py-2" />
                     </div>
-                    <div>
-                        <label class="text-xs text-slate-500">End date</label>
+                </div>
+                <div>
+                    <label class="text-xs text-slate-500">End date</label>
+                    <div wire:ignore>
                         <input type="text" data-datepicker wire:model.live="budgetForm.end_date" readonly class="w-full cursor-pointer rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                    </div>
                         @error('budgetForm.end_date') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                 </div>
@@ -233,8 +239,10 @@
                         </select>
                     </div>
                     <div>
-                        <label class="text-xs text-slate-500">Deadline</label>
+                    <label class="text-xs text-slate-500">Deadline</label>
+                    <div wire:ignore>
                         <input type="text" data-datepicker wire:model.live="goalForm.deadline" readonly class="w-full cursor-pointer rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                    </div>
                     </div>
                 </div>
                 <div class="grid gap-3 md:grid-cols-2">
@@ -302,8 +310,10 @@
                 </div>
                 <div class="grid gap-3 md:grid-cols-2">
                     <div>
-                        <label class="text-xs text-slate-500">Next billing date</label>
+                    <label class="text-xs text-slate-500">Next billing date</label>
+                    <div wire:ignore>
                         <input type="text" data-datepicker wire:model.live="subscriptionForm.next_billing_date" readonly class="w-full cursor-pointer rounded-2xl border border-[#D2F9E7] px-3 py-2" />
+                    </div>
                         @error('subscriptionForm.next_billing_date') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                     <div>
