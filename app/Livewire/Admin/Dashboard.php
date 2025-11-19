@@ -14,11 +14,13 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 class Dashboard extends Component
 {
     use WithFileUploads;
+    use WithPagination;
 
     public array $fontawesomeForm = [
         'label' => '',
@@ -36,6 +38,7 @@ class Dashboard extends Component
     public string $iconTab = 'fontawesome';
 
     public string $iconSearch = '';
+    public int $perPage = 20;
 
     public function mount(): void
     {
@@ -174,7 +177,7 @@ class Dashboard extends Component
             })
             ->orderBy('label');
 
-        $fontawesomeIcons = (clone $iconsQuery)->where('type', 'fontawesome')->get();
+        $fontawesomeIcons = (clone $iconsQuery)->where('type', 'fontawesome')->paginate($this->perPage, ['*'], 'fa_page');
         $customIcons = (clone $iconsQuery)->where('type', 'image')->get();
 
         $this->dispatch('refresh-fontawesome');

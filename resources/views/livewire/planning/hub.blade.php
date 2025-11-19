@@ -554,8 +554,8 @@
                     @foreach ($icons as $icon)
                         @if ($icon->type === $iconPickerTab && (empty($iconPickerSearch) || str_contains(strtolower($icon->label), strtolower($iconPickerSearch))))
                             <button wire:click="selectIcon({{ $icon->id }})" class="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border border-[#E2F5ED] p-2 hover:bg-[#F6FFFA]">
-                                @if ($icon->type === 'image')
-                                    <img src="{{ asset('storage/' . $icon->image_path) }}" class="h-6 w-6 object-contain" />
+                                @if ($icon->image_url)
+                                    <img src="{{ $icon->image_url }}" class="h-6 w-6 object-contain" />
                                 @else
                                     <span data-fa-icon="{{ $icon->fa_class }}" class="text-xl text-[#095C4A]"></span>
                                 @endif

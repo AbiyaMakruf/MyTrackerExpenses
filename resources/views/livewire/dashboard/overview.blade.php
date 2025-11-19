@@ -56,7 +56,7 @@
                                     <div class="flex items-center justify-between rounded-xl border border-[#D2F9E7] bg-white px-3 py-2 shadow-sm">
                                         <div class="flex items-center gap-3">
                                             <div class="flex h-10 w-10 items-center justify-center rounded-2xl" style="background-color: {{ $bg }}; color: {{ $color }}">
-                                                @if ($icon && $icon->type === 'image' && $icon->image_url)
+                                                @if ($icon && $icon->image_url)
                                                     <img src="{{ $icon->image_url }}" alt="{{ $icon->label }}" class="h-6 w-6 object-contain">
                                                 @elseif ($icon && $icon->fa_class)
                                                     <span data-fa-icon="{{ $icon->fa_class }}" class="text-lg"></span>

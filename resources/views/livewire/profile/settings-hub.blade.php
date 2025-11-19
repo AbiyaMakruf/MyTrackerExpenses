@@ -83,7 +83,7 @@
                     <div class="flex items-center justify-between rounded-2xl border border-[#E2F5ED] bg-white px-4 py-2 shadow-sm">
                         <div class="flex items-center gap-3">
                             <div class="flex h-12 w-12 items-center justify-center rounded-2xl" style="background-color: {{ $bg }}; color: {{ $color }}">
-                                @if ($icon && $icon->type === 'image' && $icon->image_url)
+                                @if ($icon && $icon->image_url)
                                     <img src="{{ $icon->image_url }}" alt="{{ $icon->label }}" class="h-6 w-6 object-contain">
                                 @elseif ($icon && $icon->fa_class)
                                     <span data-fa-icon="{{ $icon->fa_class }}" class="text-lg"></span>
@@ -152,7 +152,7 @@
                 <label class="text-xs text-slate-500">Icon</label>
                 <div class="flex items-center gap-3">
                     <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#D2F9E7]" style="background-color: {{ $walletForm['icon_background'] ?? '#F6FFFA' }}; color: {{ $walletForm['icon_color'] ?? '#095C4A' }}">
-                        @if ($walletIconPreview && $walletIconPreview['type'] === 'image' && $walletIconPreview['image_url'])
+                        @if ($walletIconPreview && $walletIconPreview['image_url'])
                             <img src="{{ $walletIconPreview['image_url'] }}" alt="{{ $walletIconPreview['label'] }}" class="h-6 w-6 object-contain">
                         @elseif ($walletIconPreview && $walletIconPreview['fa_class'])
                             <span data-fa-icon="{{ $walletIconPreview['fa_class'] }}" class="text-lg"></span>
@@ -215,7 +215,7 @@
                     <div class="flex items-center justify-between rounded-xl bg-[#F6FFFA] px-3 py-2">
                         <div class="flex items-center gap-3">
                             <div class="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/70" style="background-color: {{ $category->icon_background ?? '#F6FFFA' }}; color: {{ $category->icon_color ?? '#095C4A' }}">
-                                @if ($category->icon && $category->icon->type === 'image')
+                                @if ($category->icon && $category->icon->image_url)
                                     <img src="{{ $category->icon->image_url }}" alt="{{ $category->icon->label }}" class="h-6 w-6 object-contain">
                                 @elseif ($category->icon && $category->icon->fa_class)
                                     <span data-fa-icon="{{ $category->icon->fa_class }}" class="text-lg"></span>
@@ -270,7 +270,7 @@
                 <label class="text-xs text-slate-500">Icon</label>
                 <div class="flex items-center gap-3">
                     <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#D2F9E7]" style="background-color: {{ $categoryForm['icon_background'] ?? '#F6FFFA' }}; color: {{ $categoryForm['icon_color'] ?? '#095C4A' }}">
-                        @if ($categoryIconPreview && $categoryIconPreview['type'] === 'image' && $categoryIconPreview['image_url'])
+                        @if ($categoryIconPreview && $categoryIconPreview['image_url'])
                             <img src="{{ $categoryIconPreview['image_url'] }}" alt="{{ $categoryIconPreview['label'] }}" class="h-6 w-6 object-contain">
                         @elseif ($categoryIconPreview && $categoryIconPreview['fa_class'])
                             <span data-fa-icon="{{ $categoryIconPreview['fa_class'] }}" class="text-lg"></span>
@@ -435,7 +435,7 @@
                                     'border-[#D2F9E7]' => $currentSelection !== $icon->id,
                                 ])>
                                     <div class="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/60 bg-white text-[#095C4A]">
-                                @if ($icon->type === 'image')
+                                @if ($icon->image_url)
                                     <img src="{{ $icon->image_url }}" alt="{{ $icon->label }}" class="h-8 w-8 object-contain">
                                         @else
                                             <span data-fa-icon="{{ $icon->fa_class }}" class="text-xl"></span>

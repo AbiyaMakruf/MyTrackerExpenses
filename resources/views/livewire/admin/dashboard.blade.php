@@ -96,17 +96,30 @@
             </div>
             <input type="text" wire:model.live="iconSearch" placeholder="Search icons..." class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2 text-sm md:w-72" />
         </div>
-        <div class="flex flex-wrap gap-2">
-            <button type="button" wire:click="$set('iconTab','fontawesome')" @class([
-                'rounded-full px-4 py-2 text-sm font-semibold',
-                'bg-[#095C4A] text-white' => $iconTab === 'fontawesome',
-                'bg-[#F2FFFA] text-[#095C4A]' => $iconTab !== 'fontawesome',
-            ])>FontAwesome</button>
-            <button type="button" wire:click="$set('iconTab','image')" @class([
-                'rounded-full px-4 py-2 text-sm font-semibold',
-                'bg-[#095C4A] text-white' => $iconTab === 'image',
-                'bg-[#F2FFFA] text-[#095C4A]' => $iconTab !== 'image',
-            ])>Custom uploads</button>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap gap-2">
+                <button type="button" wire:click="$set('iconTab','fontawesome')" @class([
+                    'rounded-full px-4 py-2 text-sm font-semibold',
+                    'bg-[#095C4A] text-white' => $iconTab === 'fontawesome',
+                    'bg-[#F2FFFA] text-[#095C4A]' => $iconTab !== 'fontawesome',
+                ])>FontAwesome</button>
+                <button type="button" wire:click="$set('iconTab','image')" @class([
+                    'rounded-full px-4 py-2 text-sm font-semibold',
+                    'bg-[#095C4A] text-white' => $iconTab === 'image',
+                    'bg-[#F2FFFA] text-[#095C4A]' => $iconTab !== 'image',
+                ])>Custom uploads</button>
+            </div>
+
+            @if($iconTab === 'fontawesome')
+                <div class="flex items-center gap-2">
+                    <label class="text-xs text-slate-500">Show:</label>
+                    <select wire:model.live="perPage" class="rounded-lg border border-[#D2F9E7] px-2 py-1 text-xs">
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+            @endif
         </div>
         <div class="grid gap-3 md:grid-cols-4">
             @php($iconCollection = $iconTab === 'image' ? $customIcons : $fontawesomeIcons)
@@ -114,7 +127,7 @@
                 <div class="rounded-2xl border border-[#D2F9E7] bg-white p-3 shadow-sm">
                     <div class="flex items-center justify-between">
                         <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#F6FFFA] text-[#095C4A]">
-                            @if ($icon->type === 'image' && $icon->image_url)
+                            @if ($icon->image_url)
                                 <img src="{{ $icon->image_url }}" alt="{{ $icon->label }}" class="h-6 w-6 object-contain" />
                             @else
                                 <span data-fa-icon="{{ $icon->fa_class }}" class="text-lg"></span>
@@ -134,6 +147,12 @@
                 <p class="text-sm text-slate-400 md:col-span-4">No icons found.</p>
             @endforelse
         </div>
+        
+        @if($iconTab === 'fontawesome')
+            <div class="mt-4">
+                {{ $fontawesomeIcons->links() }}
+            </div>
+        @endif
     </div>
 
     <div class="grid gap-4 md:grid-cols-2">

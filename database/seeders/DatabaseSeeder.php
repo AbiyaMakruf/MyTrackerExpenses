@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->seedDefaultIcons();
+        $this->call(FontAwesomeIconSeeder::class);
         $this->seedDefaultCategories();
         $this->seedDemoData();
     }
