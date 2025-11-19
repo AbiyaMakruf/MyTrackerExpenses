@@ -33,7 +33,7 @@
                 <h2 class="text-lg font-semibold text-[#095C4A]">Upcoming payments</h2>
                 <div class="divide-y divide-[#D2F9E7]">
                     @forelse ($plannedPayments as $payment)
-                        <div class="py-3">
+                        <div class="group py-3">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-3">
                                     <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[#F6FFFA] text-[#095C4A]">
@@ -55,8 +55,8 @@
                                 <div class="text-right">
                                     <p class="font-semibold text-[#08745C]">{{ number_format($payment->amount, 0) }}</p>
                                     <div class="flex justify-end gap-2 text-xs">
-                                        <button wire:click="editPlannedPayment({{ $payment->id }})" class="text-[#095C4A]">Edit</button>
-                                        <button wire:click="deletePlannedPayment({{ $payment->id }})" class="text-red-500">Delete</button>
+                                        <button wire:click="editPlannedPayment({{ $payment->id }})" class="rounded-lg px-2 py-1 text-[#095C4A] hover:bg-[#F6FFFA]">Edit</button>
+                                        <button wire:click="confirmDelete('planned-payment', {{ $payment->id }})" class="rounded-lg px-2 py-1 text-red-500 hover:bg-red-50">Delete</button>
                                     </div>
                                 </div>
                             </div>
@@ -153,7 +153,7 @@
                 <h2 class="text-lg font-semibold text-[#095C4A]">Budgets</h2>
                 <div class="space-y-3">
                     @forelse ($budgets as $budget)
-                        <div class="rounded-2xl border border-[#D2F9E7] bg-white/80 p-3">
+                        <div class="group rounded-2xl border border-[#D2F9E7] bg-white/80 p-3">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-3">
                                     <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[#F6FFFA] text-[#095C4A]">
@@ -173,8 +173,8 @@
                                     </div>
                                 </div>
                                 <div class="flex gap-2 text-xs">
-                                    <button wire:click="editBudget({{ $budget->id }})" class="text-[#095C4A]">Edit</button>
-                                    <button wire:click="deleteBudget({{ $budget->id }})" class="text-red-500">Delete</button>
+                                    <button wire:click="editBudget({{ $budget->id }})" class="rounded-lg px-2 py-1 text-[#095C4A] hover:bg-[#F6FFFA]">Edit</button>
+                                    <button wire:click="confirmDelete('budget', {{ $budget->id }})" class="rounded-lg px-2 py-1 text-red-500 hover:bg-red-50">Delete</button>
                                 </div>
                             </div>
                             <div class="mt-2 h-2 rounded-full bg-[#D2F9E7]">
@@ -276,7 +276,7 @@
                 <div class="space-y-3">
                     @forelse ($goals as $goal)
                         @php($progress = $goal->target_amount > 0 ? round(($goal->current_amount / $goal->target_amount) * 100, 1) : 0)
-                        <div class="flex items-center gap-4 rounded-2xl border border-[#D2F9E7] bg-white/80 p-4">
+                        <div class="group flex items-center gap-4 rounded-2xl border border-[#D2F9E7] bg-white/80 p-4">
                             <div class="text-center">
                                 <p class="text-2xl font-semibold text-[#08745C]">{{ $progress }}%</p>
                                 <p class="text-xs text-slate-500">Progress</p>
@@ -301,8 +301,8 @@
                                         </div>
                                     </div>
                                     <div class="flex gap-2 text-xs">
-                                        <button wire:click="editGoal({{ $goal->id }})" class="text-[#095C4A]">Edit</button>
-                                        <button wire:click="deleteGoal({{ $goal->id }})" class="text-red-500">Delete</button>
+                                        <button wire:click="editGoal({{ $goal->id }})" class="rounded-lg px-2 py-1 text-[#095C4A] hover:bg-[#F6FFFA]">Edit</button>
+                                        <button wire:click="confirmDelete('goal', {{ $goal->id }})" class="rounded-lg px-2 py-1 text-red-500 hover:bg-red-50">Delete</button>
                                     </div>
                                 </div>
                                 <p class="mt-1 text-xs text-slate-400">{{ $goal->note }}</p>
@@ -398,7 +398,7 @@
                 <h2 class="text-lg font-semibold text-[#095C4A]">Active subscriptions</h2>
                 <div class="space-y-3">
                     @forelse ($subscriptions as $subscription)
-                        <div class="rounded-2xl border border-[#D2F9E7] bg-white/80 p-3">
+                        <div class="group rounded-2xl border border-[#D2F9E7] bg-white/80 p-3">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-3">
                                     <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[#F6FFFA] text-[#095C4A]">
@@ -418,8 +418,8 @@
                                     </div>
                                 </div>
                                 <div class="flex gap-2 text-xs">
-                                    <button wire:click="editSubscription({{ $subscription->id }})" class="text-[#095C4A]">Edit</button>
-                                    <button wire:click="deleteSubscription({{ $subscription->id }})" class="text-red-500">Delete</button>
+                                    <button wire:click="editSubscription({{ $subscription->id }})" class="rounded-lg px-2 py-1 text-[#095C4A] hover:bg-[#F6FFFA]">Edit</button>
+                                    <button wire:click="confirmDelete('subscription', {{ $subscription->id }})" class="rounded-lg px-2 py-1 text-red-500 hover:bg-red-50">Delete</button>
                                 </div>
                             </div>
                             <p class="mt-2 text-xs text-slate-500">Next billing {{ optional($subscription->next_billing_date)->format('d M Y') ?? '—' }}</p>

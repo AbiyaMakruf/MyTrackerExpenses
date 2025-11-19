@@ -4,6 +4,7 @@ namespace App\Livewire\Dashboard;
 
 use App\Models\Budget;
 use App\Models\Goal;
+use App\Models\PlannedPayment;
 use App\Models\RecurringTransaction;
 use App\Models\Subscription;
 use App\Models\Transaction;
@@ -71,6 +72,7 @@ class Overview extends Component
             'goalsSummary' => $this->buildGoalSummary($user),
             'upcomingRecurring' => $this->buildUpcomingRecurring($user),
             'upcomingSubscriptions' => $this->buildUpcomingSubscriptions($user),
+            'upcomingPlannedPayments' => $this->buildUpcomingPlannedPayments($user),
             'periodLabel' => $this->periodOptions[$this->period] ?? $this->period,
         ]);
     }
@@ -183,15 +185,29 @@ class Overview extends Component
 
     protected function buildUpcomingSubscriptions(User $user): array
     {
+        $subscriptions = Subscription::query()
+            ->where('user_id', $user->id)
+            ->where('next_billing_date', '>=', now()->startOfDay())
+            ->orderBy('next_billing_date')
+            ->limit(5)
+            ->with('icon')
+            ->get();
+
         return [
-            'total_monthly' => $user->subscriptions()
-                ->where('status', 'active')
-                ->sum('amount'),
-            'items' => $user->subscriptions()
-                ->where('status', 'active')
-                ->orderBy('next_billing_date')
-                ->get(),
+            'total_monthly' => $user->subscriptions()->sum('amount'),
+            'items' => $subscriptions,
         ];
+    }
+
+    protected function buildUpcomingPlannedPayments(User $user): Collection
+    {
+        return PlannedPayment::query()
+            ->where('user_id', $user->id)
+            ->where('due_date', '>=', now()->startOfDay())
+            ->orderBy('due_date')
+            ->limit(5)
+            ->with('icon')
+            ->get();
     }
 
     protected function groupWallets(Collection $wallets): Collection

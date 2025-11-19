@@ -1,21 +1,23 @@
 <div class="glass-card">
     <div class="flex flex-col gap-4">
         <div class="flex flex-col gap-2">
-            <h1 class="text-2xl font-semibold text-[#095C4A]">Add record</h1>
-            <p class="text-sm text-slate-500">Capture your expense, income or transfer instantly.</p>
+            <h1 class="text-2xl font-semibold text-[#095C4A]">{{ $editingTransactionId ? 'Edit record' : 'Add record' }}</h1>
+            <p class="text-sm text-slate-500">{{ $editingTransactionId ? 'Update your transaction details.' : 'Capture your expense, income or transfer instantly.' }}</p>
         </div>
 
-        <div class="flex flex-wrap gap-3">
-            @foreach (['expense' => 'Expense', 'income' => 'Income', 'transfer' => 'Transfer'] as $value => $label)
-                <button type="button" wire:click="$set('mode', '{{ $value }}')" @class([
-                    'rounded-full px-4 py-2 text-sm font-semibold transition',
-                    'bg-[#095C4A] text-white shadow' => $mode === $value,
-                    'bg-white text-slate-600' => $mode !== $value,
-                ])>
-                    {{ $label }}
-                </button>
-            @endforeach
-        </div>
+        @if (!$editingTransactionId)
+            <div class="flex flex-wrap gap-3">
+                @foreach (['expense' => 'Expense', 'income' => 'Income', 'transfer' => 'Transfer'] as $value => $label)
+                    <button type="button" wire:click="$set('mode', '{{ $value }}')" @class([
+                        'rounded-full px-4 py-2 text-sm font-semibold transition',
+                        'bg-[#095C4A] text-white shadow' => $mode === $value,
+                        'bg-white text-slate-600' => $mode !== $value,
+                    ])>
+                        {{ $label }}
+                    </button>
+                @endforeach
+            </div>
+        @endif
 
         @if (session('status'))
             <div class="rounded-2xl bg-[#D2F9E7] px-4 py-2 text-sm font-semibold text-[#08745C]">

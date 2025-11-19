@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\Attributes\On;
 
 #[Layout('layouts.app')]
 class Hub extends Component
@@ -82,6 +83,9 @@ class Hub extends Component
     public ?array $budgetIconPreview = null;
     public ?array $goalIconPreview = null;
     public ?array $subscriptionIconPreview = null;
+
+    public ?string $deletingType = null;
+    public ?int $deletingId = null;
 
     public function openIconPicker(string $context): void
     {
@@ -455,6 +459,42 @@ class Hub extends Component
             'note' => '',
         ];
         $this->subscriptionIconPreview = null;
+    }
+
+    public function confirmDelete(string $type, int $id): void
+    {
+        $this->deletingType = $type;
+        $this->deletingId = $id;
+        
+        $message = match($type) {
+            'planned-payment' => 'Delete this planned payment?',
+            'budget' => 'Delete this budget?',
+            'goal' => 'Delete this goal?',
+            'subscription' => 'Delete this subscription?',
+            default => 'Are you sure?',
+        };
+
+        $this->dispatch('open-confirmation-modal', [
+            'title' => 'Confirm Deletion',
+            'message' => $message,
+            'action' => 'delete-planning-confirmed',
+        ]);
+    }
+
+    #[On('delete-planning-confirmed')]
+    public function deleteConfirmed(): void
+    {
+        if (!$this->deletingId || !$this->deletingType) return;
+
+        match($this->deletingType) {
+            'planned-payment' => $this->deletePlannedPayment($this->deletingId),
+            'budget' => $this->deleteBudget($this->deletingId),
+            'goal' => $this->deleteGoal($this->deletingId),
+            'subscription' => $this->deleteSubscription($this->deletingId),
+        };
+
+        $this->deletingId = null;
+        $this->deletingType = null;
     }
 
     public function render(): View

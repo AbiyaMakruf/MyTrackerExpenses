@@ -164,8 +164,8 @@
                             </td>
                             <td class="px-3 py-3 text-right" onclick="event.stopPropagation()">
                                 <div class="flex items-center justify-end gap-2">
-                                    <a href="{{ route('records.edit', $transaction) }}" wire:navigate class="text-xs font-semibold text-[#08745C] hover:underline">Edit</a>
-                                    <button wire:click="delete({{ $transaction->id }})" wire:confirm="Are you sure you want to delete this transaction?" class="text-xs font-semibold text-[#FB7185] hover:underline">Delete</button>
+                                    <a href="{{ route('transactions.show', $transaction) }}" class="text-xs font-semibold text-[#08745C] hover:underline">Edit</a>
+                                    <button wire:click="confirmDelete({{ $transaction->id }})" class="text-xs font-semibold text-[#FB7185] hover:underline">Delete</button>
                                 </div>
                             </td>
                         </tr>

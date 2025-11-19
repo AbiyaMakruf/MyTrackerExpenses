@@ -283,6 +283,42 @@
     <div class="glass-card space-y-4">
         <div class="flex items-center justify-between">
             <div>
+                <h3 class="text-lg font-semibold text-[#095C4A]">Planned payments</h3>
+                <p class="text-xs text-slate-500">Don't miss a due date</p>
+            </div>
+            <a href="{{ route('planning') }}#planned-payments" wire:navigate class="text-xs font-semibold text-[#08745C]">Manage</a>
+        </div>
+        <div class="space-y-3">
+            @forelse ($upcomingPlannedPayments as $payment)
+                <div class="flex items-center justify-between rounded-2xl bg-white/80 px-3 py-2">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-[#F6FFFA] text-[#095C4A]">
+                            @if ($payment->icon)
+                                @if ($payment->icon->type === 'image')
+                                    <img src="{{ asset('storage/' . $payment->icon->image_path) }}" class="h-4 w-4 object-contain" />
+                                @else
+                                    <span data-fa-icon="{{ $payment->icon->fa_class }}"></span>
+                                @endif
+                            @else
+                                <span class="text-[10px] font-bold">{{ Str::substr($payment->title, 0, 2) }}</span>
+                            @endif
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold">{{ $payment->title }}</p>
+                            <p class="text-xs text-slate-500">Due {{ optional($payment->due_date)->format('d M') }}</p>
+                        </div>
+                    </div>
+                    <p class="text-sm font-semibold text-[#08745C]">{{ number_format($payment->amount, 0) }}</p>
+                </div>
+            @empty
+                <p class="text-sm text-slate-400">No planned payments.</p>
+            @endforelse
+        </div>
+    </div>
+
+    <div class="glass-card space-y-4">
+        <div class="flex items-center justify-between">
+            <div>
                 <h3 class="text-lg font-semibold text-[#095C4A]">Upcoming recurring</h3>
                 <p class="text-xs text-slate-500">What to expect next</p>
             </div>

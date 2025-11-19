@@ -7,13 +7,16 @@ use App\Models\Label;
 use App\Models\RecurringTransaction;
 use App\Models\Transaction;
 use App\Models\Wallet;
+use App\Services\GoogleCloudStorage;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -21,6 +24,9 @@ use Livewire\WithFileUploads;
 class AddRecord extends Component
 {
     use WithFileUploads;
+
+    #[Locked]
+    public ?int $editingTransactionId = null;
 
     public string $mode = 'expense';
 
@@ -53,14 +59,15 @@ class AddRecord extends Component
 
     public ?Transaction $editingTransaction = null;
 
-    public function mount($transaction = null): void
+    public function mount(Transaction $transaction = null): void
     {
-        if ($transaction && $transaction instanceof Transaction && $transaction->exists) {
+        if ($transaction && $transaction->exists) {
             if ($transaction->user_id !== Auth::id()) {
                 abort(403);
             }
             
             $this->editingTransaction = $transaction;
+            $this->editingTransactionId = $transaction->id;
             $this->mode = $transaction->type;
             
             if ($this->mode === 'transfer') {
@@ -95,7 +102,7 @@ class AddRecord extends Component
         $this->sub_category_id = null;
     }
 
-    public function save(): void
+    public function save(GoogleCloudStorage $gcs): void
     {
         if ($this->mode === 'transfer') {
             $this->saveTransfer();
@@ -108,20 +115,22 @@ class AddRecord extends Component
         $attachmentPath = null;
 
         if ($this->allowAttachmentUploads && $this->receipt) {
-            $attachmentPath = $this->receipt->store('receipts', 'public');
+            $path = 'receipts/' . Str::random(40) . '.' . $this->receipt->getClientOriginalExtension();
+            $attachmentPath = $gcs->upload($this->receipt, $path);
         }
 
         DB::transaction(function () use ($data, $user, $category, $attachmentPath) {
-            if ($this->editingTransaction) {
+            if ($this->editingTransactionId) {
+                $transaction = Transaction::find($this->editingTransactionId);
                 // Revert old balance
-                $oldWallet = $this->editingTransaction->wallet;
-                if ($this->editingTransaction->type === 'expense') {
-                    $oldWallet->increment('current_balance', $this->editingTransaction->amount);
+                $oldWallet = $transaction->wallet;
+                if ($transaction->type === 'expense') {
+                    $oldWallet->increment('current_balance', $transaction->amount);
                 } else {
-                    $oldWallet->decrement('current_balance', $this->editingTransaction->amount);
+                    $oldWallet->decrement('current_balance', $transaction->amount);
                 }
 
-                $this->editingTransaction->update([
+                $transaction->update([
                     'wallet_id' => $data['wallet_id'],
                     'category_id' => $category?->id,
                     'sub_category_id' => $this->sub_category_id,
@@ -130,10 +139,8 @@ class AddRecord extends Component
                     'payment_type' => $data['payment_type'],
                     'transaction_date' => Carbon::parse($data['transaction_date']),
                     'note' => $this->note,
-                    'attachment_path' => $attachmentPath ?? $this->editingTransaction->attachment_path,
+                    'attachment_path' => $attachmentPath ?? $transaction->attachment_path,
                 ]);
-                
-                $transaction = $this->editingTransaction;
                 
                 // Update labels
                 $transaction->labels()->sync($this->labelIds);
@@ -165,14 +172,14 @@ class AddRecord extends Component
                 $wallet->increment('current_balance', $data['amount']);
             }
 
-            if ($this->is_recurring && !$this->editingTransaction) {
+            if ($this->is_recurring && !$this->editingTransactionId) {
                 $this->createRecurringTemplate($transaction, $wallet);
             }
         });
 
-        session()->flash('status', $this->editingTransaction ? 'Record updated' : 'Record saved');
+        session()->flash('status', $this->editingTransactionId ? 'Record updated' : 'Record saved');
         
-        if ($this->editingTransaction) {
+        if ($this->editingTransactionId) {
             $this->redirectRoute('transactions.index', navigate: true);
         } else {
             $this->resetExcept(['mode', 'allowAttachmentUploads', 'paymentTypes', 'intervalOptions']);
@@ -190,15 +197,16 @@ class AddRecord extends Component
         ]);
 
         DB::transaction(function () use ($data) {
-            if ($this->editingTransaction) {
+            if ($this->editingTransactionId) {
+                $transaction = Transaction::find($this->editingTransactionId);
                 // Revert old balance
-                $oldFromWallet = Wallet::find($this->editingTransaction->wallet_id);
-                $oldToWallet = Wallet::find($this->editingTransaction->to_wallet_id);
+                $oldFromWallet = Wallet::find($transaction->wallet_id);
+                $oldToWallet = Wallet::find($transaction->to_wallet_id);
                 
-                $oldFromWallet->increment('current_balance', $this->editingTransaction->amount);
-                $oldToWallet->decrement('current_balance', $this->editingTransaction->amount);
+                $oldFromWallet->increment('current_balance', $transaction->amount);
+                $oldToWallet->decrement('current_balance', $transaction->amount);
                 
-                $this->editingTransaction->update([
+                $transaction->update([
                     'wallet_id' => $data['wallet_id'],
                     'to_wallet_id' => $data['to_wallet_id'],
                     'amount' => $data['transfer_amount'],
@@ -224,9 +232,9 @@ class AddRecord extends Component
             Wallet::where('id', $data['to_wallet_id'])->increment('current_balance', $data['transfer_amount']);
         });
 
-        session()->flash('status', $this->editingTransaction ? 'Transfer updated' : 'Transfer saved');
+        session()->flash('status', $this->editingTransactionId ? 'Transfer updated' : 'Transfer saved');
         
-        if ($this->editingTransaction) {
+        if ($this->editingTransactionId) {
             $this->redirectRoute('transactions.index', navigate: true);
         } else {
             $this->reset();

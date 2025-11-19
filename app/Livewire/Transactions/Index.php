@@ -10,6 +10,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +28,7 @@ class Index extends Component
     public ?int $categoryId = null;
     public ?int $subCategoryId = null;
     public array $labelIds = [];
+    public ?int $deletingTransactionId = null;
 
     protected $queryString = [
         'walletId' => ['except' => null],
@@ -152,6 +154,25 @@ class Index extends Component
 
                 $transaction->delete();
             });
+        }
+    }
+
+    public function confirmDelete(int $id): void
+    {
+        $this->deletingTransactionId = $id;
+        $this->dispatch('open-confirmation-modal', [
+            'title' => 'Delete Transaction',
+            'message' => 'Are you sure you want to delete this transaction? This action cannot be undone.',
+            'action' => 'delete-transaction-confirmed',
+        ]);
+    }
+
+    #[On('delete-transaction-confirmed')]
+    public function deleteConfirmed(): void
+    {
+        if ($this->deletingTransactionId) {
+            $this->delete($this->deletingTransactionId);
+            $this->deletingTransactionId = null;
         }
     }
 }
