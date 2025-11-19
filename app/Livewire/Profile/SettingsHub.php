@@ -7,6 +7,7 @@ use App\Models\Icon;
 use App\Models\Label;
 use App\Models\Transaction;
 use App\Models\Wallet;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -376,6 +377,18 @@ class SettingsHub extends Component
             ->get();
 
         $filename = 'transactions-' . now()->format('YmdHis') . '.' . $format;
+
+        if ($format === 'pdf') {
+            $pdf = Pdf::loadView('exports.transactions-pdf', [
+                'transactions' => $transactions,
+                'start' => $start,
+                'end' => $end,
+            ]);
+            
+            return response()->streamDownload(function () use ($pdf) {
+                echo $pdf->output();
+            }, $filename);
+        }
 
         return Response::streamDownload(function () use ($transactions) {
             $handle = fopen('php://output', 'w');
