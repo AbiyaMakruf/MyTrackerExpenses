@@ -35,13 +35,32 @@
                     @forelse ($plannedPayments as $payment)
                         <div class="py-3">
                             <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-semibold">{{ $payment->title }}</p>
-                                    <p class="text-xs text-slate-500">{{ optional($payment->due_date)->format('d M Y') }} • {{ strtoupper($payment->repeat_option) }}</p>
+                                <div class="flex items-center gap-3">
+                                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[#F6FFFA] text-[#095C4A]">
+                                        @if ($payment->icon)
+                                            @if ($payment->icon->type === 'image')
+                                                <img src="{{ asset('storage/' . $payment->icon->image_path) }}" class="h-5 w-5 object-contain" />
+                                            @else
+                                                <span data-fa-icon="{{ $payment->icon->fa_class }}"></span>
+                                            @endif
+                                        @else
+                                            <span class="text-xs font-bold">{{ Str::substr($payment->title, 0, 2) }}</span>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold">{{ $payment->title }}</p>
+                                        <p class="text-xs text-slate-500">{{ optional($payment->due_date)->format('d M Y') }} • {{ strtoupper($payment->repeat_option) }}</p>
+                                    </div>
                                 </div>
-                                <p class="font-semibold text-[#08745C]">{{ number_format($payment->amount, 0) }}</p>
+                                <div class="text-right">
+                                    <p class="font-semibold text-[#08745C]">{{ number_format($payment->amount, 0) }}</p>
+                                    <div class="flex justify-end gap-2 text-xs">
+                                        <button wire:click="editPlannedPayment({{ $payment->id }})" class="text-[#095C4A]">Edit</button>
+                                        <button wire:click="deletePlannedPayment({{ $payment->id }})" class="text-red-500">Delete</button>
+                                    </div>
+                                </div>
                             </div>
-                            <p class="text-xs text-slate-400">{{ $payment->note }}</p>
+                            <p class="mt-1 text-xs text-slate-400">{{ $payment->note }}</p>
                         </div>
                     @empty
                         <p class="text-sm text-slate-400">No planned payments yet.</p>
@@ -49,7 +68,12 @@
                 </div>
             </div>
             <form wire:submit.prevent="savePlannedPayment" class="space-y-3 rounded-2xl border border-[#72E3BD]/60 bg-white/80 p-4">
-                <h3 class="text-base font-semibold text-[#095C4A]">New planned payment</h3>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-semibold text-[#095C4A]">{{ $editingPlannedPaymentId ? 'Edit planned payment' : 'New planned payment' }}</h3>
+                    @if ($editingPlannedPaymentId)
+                        <button type="button" wire:click="resetPlannedPaymentForm" class="text-xs text-red-500">Cancel</button>
+                    @endif
+                </div>
                 <div>
                     <label class="text-xs text-slate-500">Title</label>
                     <input type="text" wire:model.live="plannedPaymentForm.title" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
@@ -90,6 +114,23 @@
                     </div>
                 </div>
                 <div>
+                    <label class="text-xs text-slate-500">Icon</label>
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-full border border-[#D2F9E7] bg-[#F6FFFA] text-[#095C4A]">
+                            @if ($plannedPaymentIconPreview)
+                                @if ($plannedPaymentIconPreview['type'] === 'image')
+                                    <img src="{{ $plannedPaymentIconPreview['image_url'] }}" class="h-5 w-5 object-contain" />
+                                @else
+                                    <span data-fa-icon="{{ $plannedPaymentIconPreview['fa_class'] }}"></span>
+                                @endif
+                            @else
+                                <span class="text-xs text-slate-400">None</span>
+                            @endif
+                        </div>
+                        <button type="button" wire:click="openIconPicker('planned-payment')" class="text-sm font-semibold text-[#095C4A]">Choose icon</button>
+                    </div>
+                </div>
+                <div>
                     <label class="text-xs text-slate-500">Repeat</label>
                     <select wire:model.live="plannedPaymentForm.repeat_option" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2">
                         @foreach (config('myexpenses.planning.planned_payment_repeat_options') as $option)
@@ -114,8 +155,27 @@
                     @forelse ($budgets as $budget)
                         <div class="rounded-2xl border border-[#D2F9E7] bg-white/80 p-3">
                             <div class="flex items-center justify-between">
-                                <p class="text-sm font-semibold">{{ $budget->name }}</p>
-                                <span class="text-xs text-slate-500">{{ ucfirst($budget->period_type) }}</span>
+                                <div class="flex items-center gap-3">
+                                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[#F6FFFA] text-[#095C4A]">
+                                        @if ($budget->icon)
+                                            @if ($budget->icon->type === 'image')
+                                                <img src="{{ asset('storage/' . $budget->icon->image_path) }}" class="h-5 w-5 object-contain" />
+                                            @else
+                                                <span data-fa-icon="{{ $budget->icon->fa_class }}"></span>
+                                            @endif
+                                        @else
+                                            <span class="text-xs font-bold">{{ Str::substr($budget->name, 0, 2) }}</span>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold">{{ $budget->name }}</p>
+                                        <span class="text-xs text-slate-500">{{ ucfirst($budget->period_type) }}</span>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2 text-xs">
+                                    <button wire:click="editBudget({{ $budget->id }})" class="text-[#095C4A]">Edit</button>
+                                    <button wire:click="deleteBudget({{ $budget->id }})" class="text-red-500">Delete</button>
+                                </div>
                             </div>
                             <div class="mt-2 h-2 rounded-full bg-[#D2F9E7]">
                                 <div class="h-2 rounded-full bg-[#08745C]" style="width: {{ $budget->percentage }}%"></div>
@@ -128,7 +188,12 @@
                 </div>
             </div>
             <form wire:submit.prevent="saveBudget" class="space-y-3 rounded-2xl border border-[#72E3BD]/60 bg-white/80 p-4">
-                <h3 class="text-base font-semibold text-[#095C4A]">Create budget</h3>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-semibold text-[#095C4A]">{{ $editingBudgetId ? 'Edit budget' : 'Create budget' }}</h3>
+                    @if ($editingBudgetId)
+                        <button type="button" wire:click="resetBudgetForm" class="text-xs text-red-500">Cancel</button>
+                    @endif
+                </div>
                 <div>
                     <label class="text-xs text-slate-500">Budget name</label>
                     <input type="text" wire:model.live="budgetForm.name" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
@@ -167,6 +232,23 @@
                         @endforeach
                     </select>
                 </div>
+                <div>
+                    <label class="text-xs text-slate-500">Icon</label>
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-full border border-[#D2F9E7] bg-[#F6FFFA] text-[#095C4A]">
+                            @if ($budgetIconPreview)
+                                @if ($budgetIconPreview['type'] === 'image')
+                                    <img src="{{ $budgetIconPreview['image_url'] }}" class="h-5 w-5 object-contain" />
+                                @else
+                                    <span data-fa-icon="{{ $budgetIconPreview['fa_class'] }}"></span>
+                                @endif
+                            @else
+                                <span class="text-xs text-slate-400">None</span>
+                            @endif
+                        </div>
+                        <button type="button" wire:click="openIconPicker('budget')" class="text-sm font-semibold text-[#095C4A]">Choose icon</button>
+                    </div>
+                </div>
                 <div class="grid gap-3 md:grid-cols-2">
                     <div>
                     <label class="text-xs text-slate-500">Start date</label>
@@ -199,10 +281,31 @@
                                 <p class="text-2xl font-semibold text-[#08745C]">{{ $progress }}%</p>
                                 <p class="text-xs text-slate-500">Progress</p>
                             </div>
-                            <div>
-                                <p class="text-sm font-semibold">{{ $goal->name }}</p>
-                                <p class="text-xs text-slate-500">Target {{ number_format($goal->target_amount, 0) }} by {{ optional($goal->deadline)->format('d M Y') ?? '—' }}</p>
-                                <p class="text-xs text-slate-400">{{ $goal->note }}</p>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[#F6FFFA] text-[#095C4A]">
+                                            @if ($goal->icon)
+                                                @if ($goal->icon->type === 'image')
+                                                    <img src="{{ asset('storage/' . $goal->icon->image_path) }}" class="h-5 w-5 object-contain" />
+                                                @else
+                                                    <span data-fa-icon="{{ $goal->icon->fa_class }}"></span>
+                                                @endif
+                                            @else
+                                                <span class="text-xs font-bold">{{ Str::substr($goal->name, 0, 2) }}</span>
+                                            @endif
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-semibold">{{ $goal->name }}</p>
+                                            <p class="text-xs text-slate-500">Target {{ number_format($goal->target_amount, 0) }} by {{ optional($goal->deadline)->format('d M Y') ?? '—' }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-2 text-xs">
+                                        <button wire:click="editGoal({{ $goal->id }})" class="text-[#095C4A]">Edit</button>
+                                        <button wire:click="deleteGoal({{ $goal->id }})" class="text-red-500">Delete</button>
+                                    </div>
+                                </div>
+                                <p class="mt-1 text-xs text-slate-400">{{ $goal->note }}</p>
                             </div>
                         </div>
                     @empty
@@ -211,7 +314,12 @@
                 </div>
             </div>
             <form wire:submit.prevent="saveGoal" class="space-y-3 rounded-2xl border border-[#72E3BD]/60 bg-white/80 p-4" id="goals">
-                <h3 class="text-base font-semibold text-[#095C4A]">New goal</h3>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-semibold text-[#095C4A]">{{ $editingGoalId ? 'Edit goal' : 'New goal' }}</h3>
+                    @if ($editingGoalId)
+                        <button type="button" wire:click="resetGoalForm" class="text-xs text-red-500">Cancel</button>
+                    @endif
+                </div>
                 <div>
                     <label class="text-xs text-slate-500">Goal name</label>
                     <input type="text" wire:model.live="goalForm.name" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
@@ -245,6 +353,23 @@
                     </div>
                     </div>
                 </div>
+                <div>
+                    <label class="text-xs text-slate-500">Icon</label>
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-full border border-[#D2F9E7] bg-[#F6FFFA] text-[#095C4A]">
+                            @if ($goalIconPreview)
+                                @if ($goalIconPreview['type'] === 'image')
+                                    <img src="{{ $goalIconPreview['image_url'] }}" class="h-5 w-5 object-contain" />
+                                @else
+                                    <span data-fa-icon="{{ $goalIconPreview['fa_class'] }}"></span>
+                                @endif
+                            @else
+                                <span class="text-xs text-slate-400">None</span>
+                            @endif
+                        </div>
+                        <button type="button" wire:click="openIconPicker('goal')" class="text-sm font-semibold text-[#095C4A]">Choose icon</button>
+                    </div>
+                </div>
                 <div class="grid gap-3 md:grid-cols-2">
                     <div>
                         <label class="text-xs text-slate-500">Auto-save amount</label>
@@ -275,10 +400,29 @@
                     @forelse ($subscriptions as $subscription)
                         <div class="rounded-2xl border border-[#D2F9E7] bg-white/80 p-3">
                             <div class="flex items-center justify-between">
-                                <p class="text-sm font-semibold">{{ $subscription->name }}</p>
-                                <span class="text-xs text-slate-500">{{ ucfirst($subscription->billing_cycle) }}</span>
+                                <div class="flex items-center gap-3">
+                                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[#F6FFFA] text-[#095C4A]">
+                                        @if ($subscription->icon)
+                                            @if ($subscription->icon->type === 'image')
+                                                <img src="{{ asset('storage/' . $subscription->icon->image_path) }}" class="h-5 w-5 object-contain" />
+                                            @else
+                                                <span data-fa-icon="{{ $subscription->icon->fa_class }}"></span>
+                                            @endif
+                                        @else
+                                            <span class="text-xs font-bold">{{ Str::substr($subscription->name, 0, 2) }}</span>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold">{{ $subscription->name }}</p>
+                                        <span class="text-xs text-slate-500">{{ ucfirst($subscription->billing_cycle) }}</span>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2 text-xs">
+                                    <button wire:click="editSubscription({{ $subscription->id }})" class="text-[#095C4A]">Edit</button>
+                                    <button wire:click="deleteSubscription({{ $subscription->id }})" class="text-red-500">Delete</button>
+                                </div>
                             </div>
-                            <p class="text-xs text-slate-500">Next billing {{ optional($subscription->next_billing_date)->format('d M Y') ?? '—' }}</p>
+                            <p class="mt-2 text-xs text-slate-500">Next billing {{ optional($subscription->next_billing_date)->format('d M Y') ?? '—' }}</p>
                             <p class="text-sm font-semibold text-[#08745C]">{{ number_format($subscription->amount, 0) }}</p>
                         </div>
                     @empty
@@ -287,7 +431,12 @@
                 </div>
             </div>
             <form wire:submit.prevent="saveSubscription" class="space-y-3 rounded-2xl border border-[#72E3BD]/60 bg-white/80 p-4">
-                <h3 class="text-base font-semibold text-[#095C4A]">New subscription</h3>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-semibold text-[#095C4A]">{{ $editingSubscriptionId ? 'Edit subscription' : 'New subscription' }}</h3>
+                    @if ($editingSubscriptionId)
+                        <button type="button" wire:click="resetSubscriptionForm" class="text-xs text-red-500">Cancel</button>
+                    @endif
+                </div>
                 <div>
                     <label class="text-xs text-slate-500">Name</label>
                     <input type="text" wire:model.live="subscriptionForm.name" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
@@ -347,6 +496,23 @@
                         </select>
                     </div>
                 @endif
+                <div>
+                    <label class="text-xs text-slate-500">Icon</label>
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-full border border-[#D2F9E7] bg-[#F6FFFA] text-[#095C4A]">
+                            @if ($subscriptionIconPreview)
+                                @if ($subscriptionIconPreview['type'] === 'image')
+                                    <img src="{{ $subscriptionIconPreview['image_url'] }}" class="h-5 w-5 object-contain" />
+                                @else
+                                    <span data-fa-icon="{{ $subscriptionIconPreview['fa_class'] }}"></span>
+                                @endif
+                            @else
+                                <span class="text-xs text-slate-400">None</span>
+                            @endif
+                        </div>
+                        <button type="button" wire:click="openIconPicker('subscription')" class="text-sm font-semibold text-[#095C4A]">Choose icon</button>
+                    </div>
+                </div>
                 <div class="grid gap-3 md:grid-cols-2">
                     <div>
                         <label class="text-xs text-slate-500">Auto-post transaction</label>
@@ -366,6 +532,39 @@
                 </div>
                 <button type="submit" class="btn-primary w-full">Save subscription</button>
             </form>
+        </div>
+    @endif
+
+    @if ($iconPickerOpen)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+            <div class="w-full max-w-md space-y-4 rounded-3xl bg-white p-6 shadow-xl">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-[#095C4A]">Select icon</h3>
+                    <button wire:click="$set('iconPickerOpen', false)" class="text-slate-400 hover:text-slate-600">✕</button>
+                </div>
+
+                <input type="text" wire:model.live="iconPickerSearch" placeholder="Search icons..." class="w-full rounded-2xl border border-[#D2F9E7] px-4 py-2 text-sm" />
+
+                <div class="flex gap-2 border-b border-[#D2F9E7] pb-2">
+                    <button wire:click="$set('iconPickerTab', 'fontawesome')" @class(['text-sm font-semibold', 'text-[#095C4A]' => $iconPickerTab === 'fontawesome', 'text-slate-400' => $iconPickerTab !== 'fontawesome'])>FontAwesome</button>
+                    <button wire:click="$set('iconPickerTab', 'image')" @class(['text-sm font-semibold', 'text-[#095C4A]' => $iconPickerTab === 'image', 'text-slate-400' => $iconPickerTab !== 'image'])>Custom</button>
+                </div>
+
+                <div class="grid max-h-60 grid-cols-5 gap-3 overflow-y-auto p-1">
+                    @foreach ($icons as $icon)
+                        @if ($icon->type === $iconPickerTab && (empty($iconPickerSearch) || str_contains(strtolower($icon->label), strtolower($iconPickerSearch))))
+                            <button wire:click="selectIcon({{ $icon->id }})" class="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border border-[#E2F5ED] p-2 hover:bg-[#F6FFFA]">
+                                @if ($icon->type === 'image')
+                                    <img src="{{ asset('storage/' . $icon->image_path) }}" class="h-6 w-6 object-contain" />
+                                @else
+                                    <span data-fa-icon="{{ $icon->fa_class }}" class="text-xl text-[#095C4A]"></span>
+                                @endif
+                                <span class="truncate text-[10px] text-slate-500">{{ $icon->label }}</span>
+                            </button>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
         </div>
     @endif
 </section>

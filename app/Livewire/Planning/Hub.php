@@ -5,6 +5,7 @@ namespace App\Livewire\Planning;
 use App\Models\Budget;
 use App\Models\Category;
 use App\Models\Goal;
+use App\Models\Icon;
 use App\Models\PlannedPayment;
 use App\Models\Subscription;
 use App\Models\Transaction;
@@ -19,12 +20,18 @@ class Hub extends Component
 {
     public string $tab = 'planned-payments';
 
+    public ?int $editingPlannedPaymentId = null;
+    public ?int $editingBudgetId = null;
+    public ?int $editingGoalId = null;
+    public ?int $editingSubscriptionId = null;
+
     public array $plannedPaymentForm = [
         'title' => '',
         'amount' => null,
         'due_date' => '',
         'wallet_id' => null,
         'category_id' => null,
+        'icon_id' => null,
         'repeat_option' => 'none',
         'note' => '',
     ];
@@ -35,6 +42,7 @@ class Hub extends Component
         'period_type' => 'monthly',
         'category_id' => null,
         'wallet_id' => null,
+        'icon_id' => null,
         'start_date' => '',
         'end_date' => '',
     ];
@@ -45,6 +53,7 @@ class Hub extends Component
         'current_amount' => null,
         'deadline' => '',
         'goal_wallet_id' => null,
+        'icon_id' => null,
         'auto_save_amount' => null,
         'auto_save_interval' => 'monthly',
         'note' => '',
@@ -58,10 +67,54 @@ class Hub extends Component
         'wallet_id' => null,
         'category_id' => null,
         'sub_category_id' => null,
+        'icon_id' => null,
         'auto_post_transaction' => true,
         'reminder_days' => 3,
         'note' => '',
     ];
+
+    public bool $iconPickerOpen = false;
+    public string $iconPickerContext = 'planned-payment';
+    public string $iconPickerTab = 'fontawesome';
+    public string $iconPickerSearch = '';
+    
+    public ?array $plannedPaymentIconPreview = null;
+    public ?array $budgetIconPreview = null;
+    public ?array $goalIconPreview = null;
+    public ?array $subscriptionIconPreview = null;
+
+    public function openIconPicker(string $context): void
+    {
+        $this->iconPickerContext = $context;
+        $this->iconPickerOpen = true;
+    }
+
+    public function selectIcon(int $iconId): void
+    {
+        $icon = Icon::find($iconId);
+        $preview = [
+            'type' => $icon->type,
+            'fa_class' => $icon->fa_class,
+            'image_url' => $icon->image_path ? asset('storage/' . $icon->image_path) : null,
+            'label' => $icon->label,
+        ];
+
+        if ($this->iconPickerContext === 'planned-payment') {
+            $this->plannedPaymentForm['icon_id'] = $iconId;
+            $this->plannedPaymentIconPreview = $preview;
+        } elseif ($this->iconPickerContext === 'budget') {
+            $this->budgetForm['icon_id'] = $iconId;
+            $this->budgetIconPreview = $preview;
+        } elseif ($this->iconPickerContext === 'goal') {
+            $this->goalForm['icon_id'] = $iconId;
+            $this->goalIconPreview = $preview;
+        } elseif ($this->iconPickerContext === 'subscription') {
+            $this->subscriptionForm['icon_id'] = $iconId;
+            $this->subscriptionIconPreview = $preview;
+        }
+
+        $this->iconPickerOpen = false;
+    }
 
     public function setTab(string $tab): void
     {
@@ -76,28 +129,78 @@ class Hub extends Component
             'plannedPaymentForm.due_date' => ['required', 'date'],
             'plannedPaymentForm.wallet_id' => ['required', Rule::exists('wallets', 'id')->where('user_id', Auth::id())],
             'plannedPaymentForm.category_id' => ['nullable', Rule::exists('categories', 'id')],
+            'plannedPaymentForm.icon_id' => ['nullable', Rule::exists('icons', 'id')],
             'plannedPaymentForm.repeat_option' => ['required', Rule::in(config('myexpenses.planning.planned_payment_repeat_options'))],
             'plannedPaymentForm.note' => ['nullable', 'string', 'max:500'],
         ])['plannedPaymentForm'];
 
-        PlannedPayment::create([
-            ...$data,
-            'user_id' => Auth::id(),
-            'is_recurring' => $data['repeat_option'] !== 'none',
-            'status' => 'pending',
-        ]);
+        if ($this->editingPlannedPaymentId) {
+            $plannedPayment = PlannedPayment::where('user_id', Auth::id())->findOrFail($this->editingPlannedPaymentId);
+            $plannedPayment->update([
+                ...$data,
+                'is_recurring' => $data['repeat_option'] !== 'none',
+            ]);
+            session()->flash('planning_status', 'Planned payment updated');
+        } else {
+            PlannedPayment::create([
+                ...$data,
+                'user_id' => Auth::id(),
+                'is_recurring' => $data['repeat_option'] !== 'none',
+                'status' => 'pending',
+            ]);
+            session()->flash('planning_status', 'Planned payment saved');
+        }
 
+        $this->resetPlannedPaymentForm();
+    }
+
+    public function editPlannedPayment(int $id): void
+    {
+        $plannedPayment = PlannedPayment::where('user_id', Auth::id())->findOrFail($id);
+        $this->editingPlannedPaymentId = $id;
+        $this->plannedPaymentForm = [
+            'title' => $plannedPayment->title,
+            'amount' => $plannedPayment->amount,
+            'due_date' => $plannedPayment->due_date->format('Y-m-d'),
+            'wallet_id' => $plannedPayment->wallet_id,
+            'category_id' => $plannedPayment->category_id,
+            'icon_id' => $plannedPayment->icon_id,
+            'repeat_option' => $plannedPayment->repeat_option,
+            'note' => $plannedPayment->note,
+        ];
+
+        if ($plannedPayment->icon) {
+            $this->plannedPaymentIconPreview = [
+                'type' => $plannedPayment->icon->type,
+                'fa_class' => $plannedPayment->icon->fa_class,
+                'image_url' => $plannedPayment->icon->image_path ? asset('storage/' . $plannedPayment->icon->image_path) : null,
+                'label' => $plannedPayment->icon->label,
+            ];
+        } else {
+            $this->plannedPaymentIconPreview = null;
+        }
+    }
+
+    public function deletePlannedPayment(int $id): void
+    {
+        PlannedPayment::where('user_id', Auth::id())->findOrFail($id)->delete();
+        session()->flash('planning_status', 'Planned payment deleted');
+    }
+
+    public function resetPlannedPaymentForm(): void
+    {
+        $this->editingPlannedPaymentId = null;
         $this->plannedPaymentForm = [
             'title' => '',
             'amount' => null,
             'due_date' => '',
             'wallet_id' => null,
             'category_id' => null,
+            'icon_id' => null,
             'repeat_option' => 'none',
             'note' => '',
         ];
-
-        session()->flash('planning_status', 'Planned payment saved');
+        $this->plannedPaymentIconPreview = null;
     }
 
     public function saveBudget(): void
@@ -108,26 +211,75 @@ class Hub extends Component
             'budgetForm.period_type' => ['required', Rule::in(config('myexpenses.planning.budget_period_options'))],
             'budgetForm.category_id' => ['nullable', Rule::exists('categories', 'id')],
             'budgetForm.wallet_id' => ['nullable', Rule::exists('wallets', 'id')->where('user_id', Auth::id())],
+            'budgetForm.icon_id' => ['nullable', Rule::exists('icons', 'id')],
             'budgetForm.start_date' => ['nullable', 'date'],
             'budgetForm.end_date' => ['nullable', 'date', 'after:budgetForm.start_date'],
         ])['budgetForm'];
 
-        Budget::create([
-            ...$data,
-            'user_id' => Auth::id(),
-        ]);
+        if ($this->editingBudgetId) {
+            $budget = Budget::where('user_id', Auth::id())->findOrFail($this->editingBudgetId);
+            $budget->update([
+                ...$data,
+            ]);
+            session()->flash('planning_status', 'Budget updated');
+        } else {
+            Budget::create([
+                ...$data,
+                'user_id' => Auth::id(),
+            ]);
+            session()->flash('planning_status', 'Budget saved');
+        }
 
+        $this->resetBudgetForm();
+    }
+
+    public function editBudget(int $id): void
+    {
+        $budget = Budget::where('user_id', Auth::id())->findOrFail($id);
+        $this->editingBudgetId = $id;
+        $this->budgetForm = [
+            'name' => $budget->name,
+            'amount' => $budget->amount,
+            'period_type' => $budget->period_type,
+            'category_id' => $budget->category_id,
+            'wallet_id' => $budget->wallet_id,
+            'icon_id' => $budget->icon_id,
+            'start_date' => optional($budget->start_date)->format('Y-m-d'),
+            'end_date' => optional($budget->end_date)->format('Y-m-d'),
+        ];
+
+        if ($budget->icon) {
+            $this->budgetIconPreview = [
+                'type' => $budget->icon->type,
+                'fa_class' => $budget->icon->fa_class,
+                'image_url' => $budget->icon->image_path ? asset('storage/' . $budget->icon->image_path) : null,
+                'label' => $budget->icon->label,
+            ];
+        } else {
+            $this->budgetIconPreview = null;
+        }
+    }
+
+    public function deleteBudget(int $id): void
+    {
+        Budget::where('user_id', Auth::id())->findOrFail($id)->delete();
+        session()->flash('planning_status', 'Budget deleted');
+    }
+
+    public function resetBudgetForm(): void
+    {
+        $this->editingBudgetId = null;
         $this->budgetForm = [
             'name' => '',
             'amount' => null,
             'period_type' => 'monthly',
             'category_id' => null,
             'wallet_id' => null,
+            'icon_id' => null,
             'start_date' => '',
             'end_date' => '',
         ];
-
-        session()->flash('planning_status', 'Budget saved');
+        $this->budgetIconPreview = null;
     }
 
     public function saveGoal(): void
@@ -138,30 +290,81 @@ class Hub extends Component
             'goalForm.current_amount' => ['nullable', 'numeric', 'min:0'],
             'goalForm.deadline' => ['nullable', 'date'],
             'goalForm.goal_wallet_id' => ['nullable', Rule::exists('wallets', 'id')->where('user_id', Auth::id())],
+            'goalForm.icon_id' => ['nullable', Rule::exists('icons', 'id')],
             'goalForm.auto_save_amount' => ['nullable', 'numeric', 'min:0'],
             'goalForm.auto_save_interval' => ['nullable', Rule::in(['weekly', 'monthly'])],
             'goalForm.note' => ['nullable', 'string', 'max:500'],
         ])['goalForm'];
 
-        Goal::create([
-            ...$data,
-            'user_id' => Auth::id(),
-            'status' => 'ongoing',
-            'auto_save_enabled' => filled($data['auto_save_amount']),
-        ]);
+        if ($this->editingGoalId) {
+            $goal = Goal::where('user_id', Auth::id())->findOrFail($this->editingGoalId);
+            $goal->update([
+                ...$data,
+                'auto_save_enabled' => filled($data['auto_save_amount']),
+            ]);
+            session()->flash('planning_status', 'Goal updated');
+        } else {
+            Goal::create([
+                ...$data,
+                'user_id' => Auth::id(),
+                'status' => 'ongoing',
+                'auto_save_enabled' => filled($data['auto_save_amount']),
+            ]);
+            session()->flash('planning_status', 'Goal saved');
+        }
 
+        $this->resetGoalForm();
+    }
+
+    public function editGoal(int $id): void
+    {
+        $goal = Goal::where('user_id', Auth::id())->findOrFail($id);
+        $this->editingGoalId = $id;
+        $this->goalForm = [
+            'name' => $goal->name,
+            'target_amount' => $goal->target_amount,
+            'current_amount' => $goal->current_amount,
+            'deadline' => optional($goal->deadline)->format('Y-m-d'),
+            'goal_wallet_id' => $goal->goal_wallet_id,
+            'icon_id' => $goal->icon_id,
+            'auto_save_amount' => $goal->auto_save_amount,
+            'auto_save_interval' => $goal->auto_save_interval,
+            'note' => $goal->note,
+        ];
+
+        if ($goal->icon) {
+            $this->goalIconPreview = [
+                'type' => $goal->icon->type,
+                'fa_class' => $goal->icon->fa_class,
+                'image_url' => $goal->icon->image_path ? asset('storage/' . $goal->icon->image_path) : null,
+                'label' => $goal->icon->label,
+            ];
+        } else {
+            $this->goalIconPreview = null;
+        }
+    }
+
+    public function deleteGoal(int $id): void
+    {
+        Goal::where('user_id', Auth::id())->findOrFail($id)->delete();
+        session()->flash('planning_status', 'Goal deleted');
+    }
+
+    public function resetGoalForm(): void
+    {
+        $this->editingGoalId = null;
         $this->goalForm = [
             'name' => '',
             'target_amount' => null,
             'current_amount' => null,
             'deadline' => '',
             'goal_wallet_id' => null,
+            'icon_id' => null,
             'auto_save_amount' => null,
             'auto_save_interval' => 'monthly',
             'note' => '',
         ];
-
-        session()->flash('planning_status', 'Goal saved');
+        $this->goalIconPreview = null;
     }
 
     public function saveSubscription(): void
@@ -174,18 +377,70 @@ class Hub extends Component
             'subscriptionForm.wallet_id' => ['required', Rule::exists('wallets', 'id')->where('user_id', Auth::id())],
             'subscriptionForm.category_id' => ['nullable', Rule::exists('categories', 'id')],
             'subscriptionForm.sub_category_id' => ['nullable', Rule::exists('categories', 'id')],
+            'subscriptionForm.icon_id' => ['nullable', Rule::exists('icons', 'id')],
             'subscriptionForm.auto_post_transaction' => ['boolean'],
             'subscriptionForm.reminder_days' => ['required', 'integer', 'min:0'],
             'subscriptionForm.note' => ['nullable', 'string', 'max:500'],
         ])['subscriptionForm'];
 
-        Subscription::create([
-            ...$data,
-            'user_id' => Auth::id(),
-            'status' => 'active',
-            'currency' => Auth::user()->base_currency,
-        ]);
+        if ($this->editingSubscriptionId) {
+            $subscription = Subscription::where('user_id', Auth::id())->findOrFail($this->editingSubscriptionId);
+            $subscription->update([
+                ...$data,
+            ]);
+            session()->flash('planning_status', 'Subscription updated');
+        } else {
+            Subscription::create([
+                ...$data,
+                'user_id' => Auth::id(),
+                'status' => 'active',
+                'currency' => Auth::user()->base_currency,
+            ]);
+            session()->flash('planning_status', 'Subscription saved');
+        }
 
+        $this->resetSubscriptionForm();
+    }
+
+    public function editSubscription(int $id): void
+    {
+        $subscription = Subscription::where('user_id', Auth::id())->findOrFail($id);
+        $this->editingSubscriptionId = $id;
+        $this->subscriptionForm = [
+            'name' => $subscription->name,
+            'amount' => $subscription->amount,
+            'billing_cycle' => $subscription->billing_cycle,
+            'next_billing_date' => $subscription->next_billing_date->format('Y-m-d'),
+            'wallet_id' => $subscription->wallet_id,
+            'category_id' => $subscription->category_id,
+            'sub_category_id' => $subscription->sub_category_id,
+            'icon_id' => $subscription->icon_id,
+            'auto_post_transaction' => $subscription->auto_post_transaction,
+            'reminder_days' => $subscription->reminder_days,
+            'note' => $subscription->note,
+        ];
+
+        if ($subscription->icon) {
+            $this->subscriptionIconPreview = [
+                'type' => $subscription->icon->type,
+                'fa_class' => $subscription->icon->fa_class,
+                'image_url' => $subscription->icon->image_path ? asset('storage/' . $subscription->icon->image_path) : null,
+                'label' => $subscription->icon->label,
+            ];
+        } else {
+            $this->subscriptionIconPreview = null;
+        }
+    }
+
+    public function deleteSubscription(int $id): void
+    {
+        Subscription::where('user_id', Auth::id())->findOrFail($id)->delete();
+        session()->flash('planning_status', 'Subscription deleted');
+    }
+
+    public function resetSubscriptionForm(): void
+    {
+        $this->editingSubscriptionId = null;
         $this->subscriptionForm = [
             'name' => '',
             'amount' => null,
@@ -194,12 +449,12 @@ class Hub extends Component
             'wallet_id' => null,
             'category_id' => null,
             'sub_category_id' => null,
+            'icon_id' => null,
             'auto_post_transaction' => true,
             'reminder_days' => 3,
             'note' => '',
         ];
-
-        session()->flash('planning_status', 'Subscription saved');
+        $this->subscriptionIconPreview = null;
     }
 
     public function render(): View
@@ -212,6 +467,12 @@ class Hub extends Component
                 $query->whereNull('user_id')->orWhere('user_id', Auth::id());
             })
             ->orderBy('display_order')
+            ->get();
+
+        $icons = Icon::where('is_active', true)
+            ->where(function ($query) {
+                $query->whereNull('created_by')->orWhere('created_by', Auth::id());
+            })
             ->get();
 
         $budgets = $user->budgets()->with('category')->get()->map(function (Budget $budget) {
@@ -243,6 +504,7 @@ class Hub extends Component
         return view('livewire.planning.hub', [
             'wallets' => $wallets,
             'categories' => $categories,
+            'icons' => $icons,
             'plannedPayments' => $user->plannedPayments()->latest('due_date')->get(),
             'budgets' => $budgets,
             'goals' => $user->goals()->latest('deadline')->get(),

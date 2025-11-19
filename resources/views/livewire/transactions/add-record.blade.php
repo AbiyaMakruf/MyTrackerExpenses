@@ -27,8 +27,8 @@
             <form wire:submit.prevent="save" class="space-y-4">
                 <div class="grid gap-3 md:grid-cols-2">
                     <div>
-                        <label class="text-xs text-slate-500">From wallet</label>
-                        <select wire:model.live="wallet_id" class="w-full rounded-2xl border border-[#D2F9E7] bg-white px-4 py-2">
+                        <label class="text-xs text-slate-500" for="from_wallet">From wallet</label>
+                        <select id="from_wallet" wire:model.live="wallet_id" class="w-full rounded-2xl border border-[#D2F9E7] bg-white px-4 py-2">
                             <option value="">Select wallet</option>
                             @foreach ($wallets as $wallet)
                                 <option value="{{ $wallet->id }}">{{ $wallet->name }}</option>
@@ -37,8 +37,8 @@
                         @error('wallet_id') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label class="text-xs text-slate-500">To wallet</label>
-                        <select wire:model.live="to_wallet_id" class="w-full rounded-2xl border border-[#D2F9E7] bg-white px-4 py-2">
+                        <label class="text-xs text-slate-500" for="to_wallet">To wallet</label>
+                        <select id="to_wallet" wire:model.live="to_wallet_id" class="w-full rounded-2xl border border-[#D2F9E7] bg-white px-4 py-2">
                             <option value="">Select wallet</option>
                             @foreach ($wallets as $wallet)
                                 <option value="{{ $wallet->id }}">{{ $wallet->name }}</option>

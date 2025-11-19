@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\DB;
 
 #[Layout('layouts.app')]
 class Index extends Component
@@ -128,5 +129,29 @@ class Index extends Component
             'subCategories' => $subCategories,
             'labels' => $labels,
         ]);
+    }
+
+    public function delete(int $id): void
+    {
+        $transaction = Transaction::where('user_id', Auth::id())->find($id);
+
+        if ($transaction) {
+            DB::transaction(function () use ($transaction) {
+                // Revert balance changes
+                $wallet = $transaction->wallet;
+                if ($transaction->type === 'expense') {
+                    $wallet->increment('current_balance', $transaction->amount);
+                } elseif ($transaction->type === 'income') {
+                    $wallet->decrement('current_balance', $transaction->amount);
+                } elseif ($transaction->type === 'transfer') {
+                    $wallet->increment('current_balance', $transaction->amount);
+                    if ($transaction->to_wallet_id) {
+                        Wallet::where('id', $transaction->to_wallet_id)->decrement('current_balance', $transaction->amount);
+                    }
+                }
+
+                $transaction->delete();
+            });
+        }
     }
 }

@@ -21,6 +21,7 @@ class Budget extends Model
         'end_date',
         'color',
         'threshold_warning',
+        'icon_id',
         'note',
         'metadata',
     ];
@@ -46,5 +47,10 @@ class Budget extends Model
     public function wallet()
     {
         return $this->belongsTo(Wallet::class);
+    }
+
+    public function icon()
+    {
+        return $this->belongsTo(Icon::class);
     }
 }

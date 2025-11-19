@@ -24,6 +24,7 @@ class Subscription extends Model
         'reminder_days',
         'last_billed_at',
         'currency',
+        'icon_id',
         'note',
         'metadata',
     ];
@@ -50,6 +51,11 @@ class Subscription extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function icon()
+    {
+        return $this->belongsTo(Icon::class);
     }
 
     public function subCategory()

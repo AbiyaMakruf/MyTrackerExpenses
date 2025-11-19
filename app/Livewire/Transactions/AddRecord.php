@@ -51,11 +51,40 @@ class AddRecord extends Component
 
     public bool $allowAttachmentUploads = true;
 
-    public function mount(): void
+    public ?Transaction $editingTransaction = null;
+
+    public function mount($transaction = null): void
     {
-        $this->transaction_date = now()->format('Y-m-d\TH:i');
-        $this->transfer_date = now()->format('Y-m-d\TH:i');
-        $this->wallet_id = Auth::user()->default_wallet_id ?? Auth::user()->wallets()->value('id');
+        if ($transaction && $transaction instanceof Transaction && $transaction->exists) {
+            if ($transaction->user_id !== Auth::id()) {
+                abort(403);
+            }
+            
+            $this->editingTransaction = $transaction;
+            $this->mode = $transaction->type;
+            
+            if ($this->mode === 'transfer') {
+                $this->wallet_id = $transaction->wallet_id;
+                $this->to_wallet_id = $transaction->to_wallet_id;
+                $this->transfer_amount = $transaction->amount;
+                $this->transfer_date = $transaction->transaction_date->format('Y-m-d\TH:i');
+                $this->transfer_note = $transaction->note;
+            } else {
+                $this->amount = $transaction->amount;
+                $this->wallet_id = $transaction->wallet_id;
+                $this->category_id = $transaction->category_id;
+                $this->sub_category_id = $transaction->sub_category_id;
+                $this->payment_type = $transaction->payment_type;
+                $this->transaction_date = $transaction->transaction_date->format('Y-m-d\TH:i');
+                $this->note = $transaction->note;
+                $this->labelIds = $transaction->labels->pluck('id')->toArray();
+            }
+        } else {
+            $this->transaction_date = now()->format('Y-m-d\TH:i');
+            $this->transfer_date = now()->format('Y-m-d\TH:i');
+            $this->wallet_id = Auth::user()->default_wallet_id ?? Auth::user()->wallets()->value('id');
+        }
+        
         $this->allowAttachmentUploads = config('myexpenses.records.allow_receipt_upload', true);
     }
 
@@ -83,22 +112,49 @@ class AddRecord extends Component
         }
 
         DB::transaction(function () use ($data, $user, $category, $attachmentPath) {
-            $transaction = Transaction::create([
-                'user_id' => $user->id,
-                'wallet_id' => $data['wallet_id'],
-                'category_id' => $category?->id,
-                'sub_category_id' => $this->sub_category_id,
-                'type' => $this->mode,
-                'amount' => $data['amount'],
-                'currency' => $user->base_currency,
-                'payment_type' => $data['payment_type'],
-                'transaction_date' => Carbon::parse($data['transaction_date']),
-                'note' => $this->note,
-                'attachment_path' => $attachmentPath,
-            ]);
+            if ($this->editingTransaction) {
+                // Revert old balance
+                $oldWallet = $this->editingTransaction->wallet;
+                if ($this->editingTransaction->type === 'expense') {
+                    $oldWallet->increment('current_balance', $this->editingTransaction->amount);
+                } else {
+                    $oldWallet->decrement('current_balance', $this->editingTransaction->amount);
+                }
 
-            if (! empty($this->labelIds)) {
+                $this->editingTransaction->update([
+                    'wallet_id' => $data['wallet_id'],
+                    'category_id' => $category?->id,
+                    'sub_category_id' => $this->sub_category_id,
+                    'type' => $this->mode,
+                    'amount' => $data['amount'],
+                    'payment_type' => $data['payment_type'],
+                    'transaction_date' => Carbon::parse($data['transaction_date']),
+                    'note' => $this->note,
+                    'attachment_path' => $attachmentPath ?? $this->editingTransaction->attachment_path,
+                ]);
+                
+                $transaction = $this->editingTransaction;
+                
+                // Update labels
                 $transaction->labels()->sync($this->labelIds);
+            } else {
+                $transaction = Transaction::create([
+                    'user_id' => $user->id,
+                    'wallet_id' => $data['wallet_id'],
+                    'category_id' => $category?->id,
+                    'sub_category_id' => $this->sub_category_id,
+                    'type' => $this->mode,
+                    'amount' => $data['amount'],
+                    'currency' => $user->base_currency,
+                    'payment_type' => $data['payment_type'],
+                    'transaction_date' => Carbon::parse($data['transaction_date']),
+                    'note' => $this->note,
+                    'attachment_path' => $attachmentPath,
+                ]);
+
+                if (! empty($this->labelIds)) {
+                    $transaction->labels()->sync($this->labelIds);
+                }
             }
 
             $wallet = Wallet::find($data['wallet_id']);
@@ -109,14 +165,19 @@ class AddRecord extends Component
                 $wallet->increment('current_balance', $data['amount']);
             }
 
-            if ($this->is_recurring) {
+            if ($this->is_recurring && !$this->editingTransaction) {
                 $this->createRecurringTemplate($transaction, $wallet);
             }
         });
 
-        session()->flash('status', 'Record saved');
-        $this->resetExcept(['mode', 'allowAttachmentUploads', 'paymentTypes', 'intervalOptions']);
-        $this->mount();
+        session()->flash('status', $this->editingTransaction ? 'Record updated' : 'Record saved');
+        
+        if ($this->editingTransaction) {
+            $this->redirectRoute('transactions.index', navigate: true);
+        } else {
+            $this->resetExcept(['mode', 'allowAttachmentUploads', 'paymentTypes', 'intervalOptions']);
+            $this->mount();
+        }
     }
 
     protected function saveTransfer(): void
@@ -129,26 +190,48 @@ class AddRecord extends Component
         ]);
 
         DB::transaction(function () use ($data) {
-            $user = Auth::user();
-            $transaction = Transaction::create([
-                'user_id' => $user->id,
-                'wallet_id' => $data['wallet_id'],
-                'to_wallet_id' => $data['to_wallet_id'],
-                'type' => 'transfer',
-                'amount' => $data['transfer_amount'],
-                'currency' => $user->base_currency,
-                'transaction_date' => Carbon::parse($data['transfer_date']),
-                'note' => $this->transfer_note,
-                'status' => 'posted',
-            ]);
+            if ($this->editingTransaction) {
+                // Revert old balance
+                $oldFromWallet = Wallet::find($this->editingTransaction->wallet_id);
+                $oldToWallet = Wallet::find($this->editingTransaction->to_wallet_id);
+                
+                $oldFromWallet->increment('current_balance', $this->editingTransaction->amount);
+                $oldToWallet->decrement('current_balance', $this->editingTransaction->amount);
+                
+                $this->editingTransaction->update([
+                    'wallet_id' => $data['wallet_id'],
+                    'to_wallet_id' => $data['to_wallet_id'],
+                    'amount' => $data['transfer_amount'],
+                    'transaction_date' => Carbon::parse($data['transfer_date']),
+                    'note' => $this->transfer_note,
+                ]);
+            } else {
+                $user = Auth::user();
+                Transaction::create([
+                    'user_id' => $user->id,
+                    'wallet_id' => $data['wallet_id'],
+                    'to_wallet_id' => $data['to_wallet_id'],
+                    'type' => 'transfer',
+                    'amount' => $data['transfer_amount'],
+                    'currency' => $user->base_currency,
+                    'transaction_date' => Carbon::parse($data['transfer_date']),
+                    'note' => $this->transfer_note,
+                    'status' => 'posted',
+                ]);
+            }
 
             Wallet::where('id', $data['wallet_id'])->decrement('current_balance', $data['transfer_amount']);
             Wallet::where('id', $data['to_wallet_id'])->increment('current_balance', $data['transfer_amount']);
         });
 
-        session()->flash('status', 'Transfer saved');
-        $this->reset();
-        $this->mount();
+        session()->flash('status', $this->editingTransaction ? 'Transfer updated' : 'Transfer saved');
+        
+        if ($this->editingTransaction) {
+            $this->redirectRoute('transactions.index', navigate: true);
+        } else {
+            $this->reset();
+            $this->mount();
+        }
     }
 
     protected function createRecurringTemplate(Transaction $transaction, Wallet $wallet): void

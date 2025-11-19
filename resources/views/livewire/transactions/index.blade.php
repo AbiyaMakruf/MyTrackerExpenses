@@ -138,11 +138,12 @@
                         <th class="px-3 py-2">Category</th>
                         <th class="px-3 py-2">Labels</th>
                         <th class="px-3 py-2 text-right">Amount</th>
+                        <th class="px-3 py-2 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-[#F1F5F9]">
                     @foreach ($transactions as $transaction)
-                        <tr>
+                        <tr class="cursor-pointer transition-colors hover:bg-slate-50" onclick="window.location.href='{{ route('transactions.show', $transaction) }}'">
                             <td class="px-3 py-3 text-slate-500">{{ $transaction->transaction_date->format('d M Y H:i') }}</td>
                             <td class="px-3 py-3 font-semibold text-[#095C4A]">{{ $transaction->wallet->name }}</td>
                             <td class="px-3 py-3">
@@ -160,6 +161,12 @@
                             </td>
                             <td class="px-3 py-3 text-right font-semibold {{ $transaction->type === 'income' ? 'text-[#08745C]' : 'text-[#FB7185]' }}">
                                 {{ $transaction->type === 'income' ? '+' : '-' }}{{ number_format($transaction->amount, 0) }}
+                            </td>
+                            <td class="px-3 py-3 text-right" onclick="event.stopPropagation()">
+                                <div class="flex items-center justify-end gap-2">
+                                    <a href="{{ route('records.edit', $transaction) }}" wire:navigate class="text-xs font-semibold text-[#08745C] hover:underline">Edit</a>
+                                    <button wire:click="delete({{ $transaction->id }})" wire:confirm="Are you sure you want to delete this transaction?" class="text-xs font-semibold text-[#FB7185] hover:underline">Delete</button>
+                                </div>
                             </td>
                         </tr>
                     @endforeach

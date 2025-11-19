@@ -35,6 +35,11 @@
                             'bg-[#095C4A] text-white' => request()->routeIs('transactions.index'),
                             'text-slate-600 hover:bg-[#D2F9E7] hover:text-[#095C4A]' => ! request()->routeIs('transactions.index'),
                         ])>Transactions</a>
+                        <a href="{{ route('memos') }}" wire:navigate @class([
+                            'rounded-full px-4 py-2 transition',
+                            'bg-[#095C4A] text-white' => request()->routeIs('memos'),
+                            'text-slate-600 hover:bg-[#D2F9E7] hover:text-[#095C4A]' => ! request()->routeIs('memos'),
+                        ])>Memos</a>
                         <a href="{{ route('profile.settings') }}" wire:navigate @class([
                             'rounded-full px-4 py-2 transition',
                             'bg-[#095C4A] text-white' => request()->routeIs('profile.settings'),
@@ -70,12 +75,13 @@
             </main>
 
             <nav class="fixed inset-x-0 bottom-0 z-40 mx-auto mb-2 max-w-3xl rounded-t-3xl border border-green-100 bg-white/90 px-6 py-3 shadow-2xl shadow-[#095C4A]/30 backdrop-blur md:hidden">
-                <div class="grid grid-cols-5 gap-2 text-xs font-medium text-slate-600">
+                <div class="grid grid-cols-6 gap-2 text-xs font-medium text-slate-600">
                     @php($navItems = [
                         ['route' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home'],
                         ['route' => 'planning', 'label' => 'Planning', 'icon' => 'calendar-days'],
-                        ['route' => 'statistics', 'label' => 'Statistics', 'icon' => 'chart-pie'],
-                        ['route' => 'transactions.index', 'label' => 'Transactions', 'icon' => 'clipboard-document-list'],
+                        ['route' => 'statistics', 'label' => 'Stats', 'icon' => 'chart-pie'],
+                        ['route' => 'transactions.index', 'label' => 'Trans.', 'icon' => 'clipboard-document-list'],
+                        ['route' => 'memos', 'label' => 'Memos', 'icon' => 'pencil-square'],
                         ['route' => 'profile.settings', 'label' => 'Profile', 'icon' => 'user-circle'],
                     ])
                     @foreach ($navItems as $item)

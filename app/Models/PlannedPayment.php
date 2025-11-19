@@ -21,6 +21,7 @@ class PlannedPayment extends Model
         'is_recurring',
         'status',
         'transaction_id',
+        'icon_id',
         'note',
         'metadata',
     ];
@@ -45,6 +46,11 @@ class PlannedPayment extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function icon()
+    {
+        return $this->belongsTo(Icon::class);
     }
 
     public function transaction()

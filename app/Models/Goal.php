@@ -22,6 +22,7 @@ class Goal extends Model
         'auto_save_next_run_at',
         'auto_save_enabled',
         'status',
+        'icon_id',
         'note',
         'metadata',
     ];
@@ -44,5 +45,10 @@ class Goal extends Model
     public function wallet()
     {
         return $this->belongsTo(Wallet::class, 'goal_wallet_id');
+    }
+
+    public function icon()
+    {
+        return $this->belongsTo(Icon::class);
     }
 }

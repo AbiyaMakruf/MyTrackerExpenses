@@ -15,11 +15,13 @@ Route::redirect('/', '/login');
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardOverview::class)->name('dashboard');
     Route::get('records/add', AddRecord::class)->name('records.add');
+    Route::get('records/{transaction}/edit', AddRecord::class)->name('records.edit');
     Route::get('planning', PlanningHub::class)->name('planning');
     Route::get('statistics', StatisticsOverview::class)->name('statistics');
     Route::get('transactions', TransactionsIndex::class)->name('transactions.index');
     Route::get('transactions/{transaction}', TransactionShow::class)->name('transactions.show');
     Route::get('profile', SettingsHub::class)->name('profile.settings');
+    Route::get('memos', \App\Livewire\Memos\Index::class)->name('memos');
 });
 
 Route::redirect('settings', 'profile')->middleware('auth');

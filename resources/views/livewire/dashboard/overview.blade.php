@@ -191,7 +191,20 @@
             @forelse ($budgetProgress as $budget)
                 <div>
                     <div class="flex items-center justify-between">
-                        <p class="text-sm font-semibold text-[#095C4A]">{{ $budget['budget']->name }}</p>
+                        <div class="flex items-center gap-2">
+                            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-[#F6FFFA] text-[#095C4A]">
+                                @if ($budget['budget']->icon)
+                                    @if ($budget['budget']->icon->type === 'image')
+                                        <img src="{{ asset('storage/' . $budget['budget']->icon->image_path) }}" class="h-4 w-4 object-contain" />
+                                    @else
+                                        <span data-fa-icon="{{ $budget['budget']->icon->fa_class }}"></span>
+                                    @endif
+                                @else
+                                    <span class="text-[10px] font-bold">{{ Str::substr($budget['budget']->name, 0, 2) }}</span>
+                                @endif
+                            </div>
+                            <p class="text-sm font-semibold text-[#095C4A]">{{ $budget['budget']->name }}</p>
+                        </div>
                         <p class="text-xs text-slate-500">{{ number_format($budget['spent'], 0) }} / {{ number_format($budget['budget']->amount, 0) }}</p>
                     </div>
                     <div class="mt-2 h-2 rounded-full bg-[#D2F9E7]">
@@ -243,7 +256,18 @@
                         </span>
                     </div>
                     <div class="flex-1">
-                        <p class="text-sm font-semibold text-[#095C4A]">{{ $goal['goal']->name }}</p>
+                        <div class="flex items-center gap-2">
+                            @if ($goal['goal']->icon)
+                                <div class="flex h-6 w-6 items-center justify-center rounded-full bg-[#F6FFFA] text-[#095C4A]">
+                                    @if ($goal['goal']->icon->type === 'image')
+                                        <img src="{{ asset('storage/' . $goal['goal']->icon->image_path) }}" class="h-3 w-3 object-contain" />
+                                    @else
+                                        <span data-fa-icon="{{ $goal['goal']->icon->fa_class }}" class="text-xs"></span>
+                                    @endif
+                                </div>
+                            @endif
+                            <p class="text-sm font-semibold text-[#095C4A]">{{ $goal['goal']->name }}</p>
+                        </div>
                         <p class="text-xs text-slate-500">Target {{ number_format($goal['goal']->target_amount, 0) }}</p>
                         @if ($goal['is_near_deadline'])
                             <p class="text-xs font-semibold text-[#FB7185]">Approaching deadline</p>
@@ -269,7 +293,18 @@
                 <ul class="mt-2 space-y-2">
                     @forelse ($upcomingRecurring['seven_days'] as $item)
                         <li class="flex items-center justify-between rounded-xl bg-white/70 px-3 py-2">
-                            <span>{{ $item->note ?? $item->type }}</span>
+                            <div class="flex items-center gap-2">
+                                @if ($item->icon)
+                                    <div class="flex h-6 w-6 items-center justify-center rounded-full bg-[#F6FFFA] text-[#095C4A]">
+                                        @if ($item->icon->type === 'image')
+                                            <img src="{{ asset('storage/' . $item->icon->image_path) }}" class="h-3 w-3 object-contain" />
+                                        @else
+                                            <span data-fa-icon="{{ $item->icon->fa_class }}" class="text-xs"></span>
+                                        @endif
+                                    </div>
+                                @endif
+                                <span>{{ $item->note ?? $item->type }}</span>
+                            </div>
                             <span class="font-semibold text-[#08745C]">{{ number_format($item->amount, 0) }}</span>
                         </li>
                     @empty
@@ -282,7 +317,18 @@
                 <ul class="mt-2 space-y-2">
                     @forelse ($upcomingRecurring['thirty_days'] as $item)
                         <li class="flex items-center justify-between rounded-xl bg-white/70 px-3 py-2">
-                            <span>{{ $item->note ?? $item->type }}</span>
+                            <div class="flex items-center gap-2">
+                                @if ($item->icon)
+                                    <div class="flex h-6 w-6 items-center justify-center rounded-full bg-[#F6FFFA] text-[#095C4A]">
+                                        @if ($item->icon->type === 'image')
+                                            <img src="{{ asset('storage/' . $item->icon->image_path) }}" class="h-3 w-3 object-contain" />
+                                        @else
+                                            <span data-fa-icon="{{ $item->icon->fa_class }}" class="text-xs"></span>
+                                        @endif
+                                    </div>
+                                @endif
+                                <span>{{ $item->note ?? $item->type }}</span>
+                            </div>
                             <span class="font-semibold text-[#08745C]">{{ optional($item->next_run_at)->format('d M') }}</span>
                         </li>
                     @empty
@@ -352,9 +398,20 @@
         <div class="space-y-3">
             @forelse ($upcomingSubscriptions['items'] as $subscription)
                 <div class="flex items-center justify-between rounded-2xl bg-white/80 px-3 py-2">
-                    <div>
-                        <p class="text-sm font-semibold">{{ $subscription->name }}</p>
-                        <p class="text-xs text-slate-500">Next billing {{ optional($subscription->next_billing_date)->format('d M') }}</p>
+                    <div class="flex items-center gap-3">
+                        @if ($subscription->icon)
+                            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-[#F6FFFA] text-[#095C4A]">
+                                @if ($subscription->icon->type === 'image')
+                                    <img src="{{ asset('storage/' . $subscription->icon->image_path) }}" class="h-4 w-4 object-contain" />
+                                @else
+                                    <span data-fa-icon="{{ $subscription->icon->fa_class }}"></span>
+                                @endif
+                            </div>
+                        @endif
+                        <div>
+                            <p class="text-sm font-semibold">{{ $subscription->name }}</p>
+                            <p class="text-xs text-slate-500">Next billing {{ optional($subscription->next_billing_date)->format('d M') }}</p>
+                        </div>
                     </div>
                     <p class="text-sm font-semibold text-[#08745C]">{{ number_format($subscription->amount, 0) }}</p>
                 </div>
