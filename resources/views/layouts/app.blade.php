@@ -50,8 +50,8 @@
                                 size="sm"
                             />
                             <flux:menu class="w-48">
-                                <flux:menu.item :href="route('profile.settings')" icon="cog-6-tooth" wire:navigate>Settings</flux:menu.item>
-                                <flux:menu.item :href="route('profile.settings')" icon="user" wire:navigate>Profile</flux:menu.item>
+                                <flux:menu.item :href="route('settings.index')" icon="cog-6-tooth" wire:navigate>Settings</flux:menu.item>
+                                <flux:menu.item :href="route('profile.index')" icon="user" wire:navigate>Profile</flux:menu.item>
                                 @can('access-admin')
                                 <flux:menu.item :href="route('admin.dashboard')" icon="shield-check" wire:navigate>Admin</flux:menu.item>
                                 @endcan

@@ -20,11 +20,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('statistics', StatisticsOverview::class)->name('statistics');
     Route::get('transactions', TransactionsIndex::class)->name('transactions.index');
     Route::get('transactions/{transaction}', TransactionShow::class)->name('transactions.show');
-    Route::get('profile', SettingsHub::class)->name('profile.settings');
+    Route::get('profile', \App\Livewire\Profile\Index::class)->name('profile.index');
+    Route::get('settings', \App\Livewire\Settings\Index::class)->name('settings.index');
     Route::get('memos', \App\Livewire\Memos\Index::class)->name('memos');
 });
-
-Route::redirect('settings', 'profile')->middleware('auth');
 
 Route::middleware(['auth', 'can:access-admin'])
     ->prefix('admin')

@@ -36,11 +36,6 @@ class Overview extends Component
         $this->period = config('myexpenses.dashboard.default_filter', 'this_month');
     }
 
-    public function updatingPeriod(): void
-    {
-        $this->resetPage();
-    }
-
     public function render(): View
     {
         $user = Auth::user();
