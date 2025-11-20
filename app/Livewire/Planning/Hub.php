@@ -15,10 +15,13 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\Attributes\On;
+use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 class Hub extends Component
 {
+    use WithPagination;
+
     public string $tab = 'planned-payments';
 
     public ?int $editingPlannedPaymentId = null;
@@ -78,6 +81,7 @@ class Hub extends Component
     public string $iconPickerContext = 'planned-payment';
     public string $iconPickerTab = 'fontawesome';
     public string $iconPickerSearch = '';
+    public int $perPage = 20;
     
     public ?array $plannedPaymentIconPreview = null;
     public ?array $budgetIconPreview = null;
@@ -99,8 +103,7 @@ class Hub extends Component
         $preview = [
             'type' => $icon->type,
             'fa_class' => $icon->fa_class,
-            'image_url' => $icon->image_path ? asset('storage/' . $icon->image_path) : null,
-            'label' => $icon->label,
+            'image_url' => $icon->image_url,
         ];
 
         if ($this->iconPickerContext === 'planned-payment') {
@@ -118,6 +121,16 @@ class Hub extends Component
         }
 
         $this->iconPickerOpen = false;
+    }
+
+    public function updatingIconPickerSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingPerPage(): void
+    {
+        $this->resetPage();
     }
 
     public function setTab(string $tab): void
@@ -509,11 +522,29 @@ class Hub extends Component
             ->orderBy('display_order')
             ->get();
 
-        $icons = Icon::where('is_active', true)
-            ->where(function ($query) {
-                $query->whereNull('created_by')->orWhere('created_by', Auth::id());
+        $iconQuery = Icon::query()
+            ->where('is_active', true)
+            ->when($this->iconPickerSearch, function ($query) {
+                $searchTerm = $this->iconPickerSearch;
+                $searchLabel = str_replace('-', ' ', $searchTerm);
+
+                $query->where(function ($sub) use ($searchTerm, $searchLabel) {
+                    $sub->where('label', 'like', '%'.$searchTerm.'%')
+                        ->orWhere('label', 'like', '%'.$searchLabel.'%')
+                        ->orWhere('fa_class', 'like', '%'.$searchTerm.'%');
+                });
             })
-            ->get();
+            ->orderBy('label');
+
+        $fontawesomeIcons = $this->iconPickerOpen
+            ? (clone $iconQuery)->where('type', 'fontawesome')->paginate($this->perPage)
+            : collect();
+
+        $customIcons = $this->iconPickerOpen
+            ? (clone $iconQuery)->where('type', 'image')->get()
+            : collect();
+
+        $this->dispatch('refresh-fontawesome');
 
         $budgets = $user->budgets()->with('category')->get()->map(function (Budget $budget) {
             $spent = Transaction::query()
@@ -544,7 +575,8 @@ class Hub extends Component
         return view('livewire.planning.hub', [
             'wallets' => $wallets,
             'categories' => $categories,
-            'icons' => $icons,
+            'iconPickerFontawesome' => $fontawesomeIcons,
+            'iconPickerCustom' => $customIcons,
             'plannedPayments' => $user->plannedPayments()->latest('due_date')->get(),
             'budgets' => $budgets,
             'goals' => $user->goals()->latest('deadline')->get(),

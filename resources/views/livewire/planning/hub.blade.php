@@ -537,33 +537,49 @@
 
     @if ($iconPickerOpen)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-            <div class="w-full max-w-md space-y-4 rounded-3xl bg-white p-6 shadow-xl">
+            <div class="w-full max-w-2xl space-y-4 rounded-3xl bg-white p-6 shadow-xl">
                 <div class="flex items-center justify-between">
                     <h3 class="text-lg font-semibold text-[#095C4A]">Select icon</h3>
                     <button wire:click="$set('iconPickerOpen', false)" class="text-slate-400 hover:text-slate-600">✕</button>
                 </div>
 
-                <input type="text" wire:model.live="iconPickerSearch" placeholder="Search icons..." class="w-full rounded-2xl border border-[#D2F9E7] px-4 py-2 text-sm" />
+                <div class="flex items-center gap-2">
+                    <input type="text" wire:model.live="iconPickerSearch" placeholder="Search icons..." class="w-full rounded-2xl border border-[#D2F9E7] px-4 py-2 text-sm" />
+                    @if($iconPickerTab === 'fontawesome')
+                        <select wire:model.live="perPage" class="rounded-2xl border border-[#D2F9E7] px-3 py-2 text-sm">
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="500">500</option>
+                        </select>
+                    @endif
+                </div>
 
                 <div class="flex gap-2 border-b border-[#D2F9E7] pb-2">
                     <button wire:click="$set('iconPickerTab', 'fontawesome')" @class(['text-sm font-semibold', 'text-[#095C4A]' => $iconPickerTab === 'fontawesome', 'text-slate-400' => $iconPickerTab !== 'fontawesome'])>FontAwesome</button>
                     <button wire:click="$set('iconPickerTab', 'image')" @class(['text-sm font-semibold', 'text-[#095C4A]' => $iconPickerTab === 'image', 'text-slate-400' => $iconPickerTab !== 'image'])>Custom</button>
                 </div>
 
+                @php($pickerIcons = $iconPickerTab === 'image' ? $iconPickerCustom : $iconPickerFontawesome)
                 <div class="grid max-h-60 grid-cols-5 gap-3 overflow-y-auto p-1">
-                    @foreach ($icons as $icon)
-                        @if ($icon->type === $iconPickerTab && (empty($iconPickerSearch) || str_contains(strtolower($icon->label), strtolower($iconPickerSearch))))
-                            <button wire:click="selectIcon({{ $icon->id }})" class="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border border-[#E2F5ED] p-2 hover:bg-[#F6FFFA]">
-                                @if ($icon->image_url)
-                                    <img src="{{ $icon->image_url }}" class="h-6 w-6 object-contain" />
-                                @else
-                                    <span data-fa-icon="{{ $icon->fa_class }}" class="text-xl text-[#095C4A]"></span>
-                                @endif
-                                <span class="truncate text-[10px] text-slate-500">{{ $icon->label }}</span>
-                            </button>
-                        @endif
+                    @foreach ($pickerIcons as $icon)
+                        <button wire:click="selectIcon({{ $icon->id }})" class="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border border-[#E2F5ED] p-2 hover:bg-[#F6FFFA]">
+                            @if ($icon->image_url)
+                                <img src="{{ $icon->image_url }}" class="h-6 w-6 object-contain" />
+                            @else
+                                <span data-fa-icon="{{ $icon->fa_class }}" class="text-xl text-[#095C4A]"></span>
+                            @endif
+                            <span class="truncate text-[10px] text-slate-500">{{ $icon->label }}</span>
+                        </button>
                     @endforeach
                 </div>
+
+                @if ($iconPickerTab === 'fontawesome')
+                    <div class="mt-4">
+                        {{ $pickerIcons->links() }}
+                    </div>
+                @endif
             </div>
         </div>
     @endif
