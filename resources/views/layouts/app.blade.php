@@ -40,11 +40,6 @@
                             'bg-[#095C4A] text-white' => request()->routeIs('memos'),
                             'text-slate-600 hover:bg-[#D2F9E7] hover:text-[#095C4A]' => ! request()->routeIs('memos'),
                         ])>Memos</a>
-                        <a href="{{ route('profile.settings') }}" wire:navigate @class([
-                            'rounded-full px-4 py-2 transition',
-                            'bg-[#095C4A] text-white' => request()->routeIs('profile.settings'),
-                            'text-slate-600 hover:bg-[#D2F9E7] hover:text-[#095C4A]' => ! request()->routeIs('profile.settings'),
-                        ])>Profile</a>
                     </nav>
                     <div class="flex items-center gap-3">
                         <flux:dropdown align="end">
@@ -56,6 +51,7 @@
                             />
                             <flux:menu class="w-48">
                                 <flux:menu.item :href="route('profile.settings')" icon="cog-6-tooth" wire:navigate>Settings</flux:menu.item>
+                                <flux:menu.item :href="route('profile.settings')" icon="user" wire:navigate>Profile</flux:menu.item>
                                 @can('access-admin')
                                 <flux:menu.item :href="route('admin.dashboard')" icon="shield-check" wire:navigate>Admin</flux:menu.item>
                                 @endcan
@@ -74,15 +70,14 @@
                 {{ $slot }}
             </main>
 
-            <nav class="fixed inset-x-0 bottom-0 z-40 mx-auto mb-2 max-w-3xl rounded-t-3xl border border-green-100 bg-white/90 px-6 py-3 shadow-2xl shadow-[#095C4A]/30 backdrop-blur md:hidden">
-                <div class="grid grid-cols-6 gap-2 text-xs font-medium text-slate-600">
+            <nav class="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200 bg-white pb-safe pt-2 dark:border-slate-700 dark:bg-slate-900 md:hidden">
+                <div class="mx-auto grid w-full max-w-md grid-cols-5 items-center justify-items-center px-4 text-[10px] font-medium">
                     @php($navItems = [
                         ['route' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home'],
                         ['route' => 'planning', 'label' => 'Planning', 'icon' => 'calendar-days'],
                         ['route' => 'statistics', 'label' => 'Stats', 'icon' => 'chart-pie'],
                         ['route' => 'transactions.index', 'label' => 'Trans.', 'icon' => 'clipboard-document-list'],
                         ['route' => 'memos', 'label' => 'Memos', 'icon' => 'pencil-square'],
-                        ['route' => 'profile.settings', 'label' => 'Profile', 'icon' => 'user-circle'],
                     ])
                     @foreach ($navItems as $item)
                         @php($isActive = request()->routeIs($item['route']))

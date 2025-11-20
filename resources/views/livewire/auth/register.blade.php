@@ -77,7 +77,7 @@
 
         <div class="space-x-1 text-center text-sm text-slate-500 rtl:space-x-reverse dark:text-gray-300">
             <span>{{ __('Already have an account?') }}</span>
-            <flux:link :href="route('login')" class="font-semibold text-[#08745C] hover:underline dark:text-[#72E3BD]" wire:navigate>{{ __('Log in') }}</flux:link>
+            <a href="{{ route('login') }}" class="font-semibold text-[#08745C] hover:underline dark:text-[#72E3BD]" wire:navigate>{{ __('Log in') }}</a>
         </div>
     </div>
 </x-layouts.auth>

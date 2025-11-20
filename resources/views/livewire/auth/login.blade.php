@@ -43,9 +43,9 @@
                 />
 
                 @if (Route::has('password.request'))
-                    <flux:link class="absolute top-0 text-sm end-0 text-[#08745C]" :href="route('password.request')" wire:navigate>
+                    <a href="{{ route('password.request') }}" class="absolute top-0 text-sm end-0 text-[#08745C]" wire:navigate>
                         {{ __('Forgot password?') }}
-                    </flux:link>
+                    </a>
                 @endif
             </div>
 
@@ -59,7 +59,7 @@
         @if (Route::has('register'))
             <div class="space-x-1 text-center text-sm text-slate-500 rtl:space-x-reverse dark:text-gray-300">
                 <span>{{ __('New here?') }}</span>
-                <flux:link :href="route('register')" class="font-semibold text-[#08745C] hover:underline dark:text-[#72E3BD]" wire:navigate>{{ __('Create an account') }}</flux:link>
+                <a href="{{ route('register') }}" class="font-semibold text-[#08745C] hover:underline dark:text-[#72E3BD]" wire:navigate>{{ __('Create an account') }}</a>
             </div>
         @endif
     </div>
