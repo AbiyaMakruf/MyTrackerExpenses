@@ -146,6 +146,11 @@ class Dashboard extends Component
         $icon->update(['is_active' => ! $icon->is_active]);
     }
 
+    public function updatingIconSearch(): void
+    {
+        $this->resetPage('fa_page');
+    }
+
     public function render(): View
     {
         $users = User::query()
@@ -170,9 +175,13 @@ class Dashboard extends Component
 
         $iconsQuery = Icon::query()
             ->when($this->iconSearch, function ($query) {
-                $query->where(function ($sub) {
-                    $sub->where('label', 'like', '%'.$this->iconSearch.'%')
-                        ->orWhere('fa_class', 'like', '%'.$this->iconSearch.'%');
+                $searchTerm = $this->iconSearch;
+                $searchLabel = str_replace('-', ' ', $searchTerm);
+
+                $query->where(function ($sub) use ($searchTerm, $searchLabel) {
+                    $sub->where('label', 'like', '%'.$searchTerm.'%')
+                        ->orWhere('label', 'like', '%'.$searchLabel.'%')
+                        ->orWhere('fa_class', 'like', '%'.$searchTerm.'%');
                 });
             })
             ->orderBy('label');

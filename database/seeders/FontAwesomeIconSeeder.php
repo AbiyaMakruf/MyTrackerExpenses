@@ -28,6 +28,20 @@ class FontAwesomeIconSeeder extends Seeder
             $this->command->info("Updated {$updated} existing icons to FontAwesome type.");
         }
 
+        // Update existing icons where fa_class is null
+        $iconsToUpdate = Icon::where('type', 'fontawesome')->whereNull('fa_class')->get();
+        $updatedCount = 0;
+        foreach ($iconsToUpdate as $icon) {
+             if ($icon->image_path) {
+                 $filename = pathinfo($icon->image_path, PATHINFO_FILENAME);
+                 $icon->update(['fa_class' => $filename]);
+                 $updatedCount++;
+             }
+        }
+        if ($updatedCount > 0) {
+            $this->command->info("Backfilled fa_class for {$updatedCount} existing icons.");
+        }
+
         // Get all files recursively
         $files = $disk->allFiles($basePath);
         
@@ -63,7 +77,7 @@ class FontAwesomeIconSeeder extends Seeder
             if (!$exists) {
                 $batch[] = [
                     'type' => 'fontawesome',
-                    'fa_class' => null,
+                    'fa_class' => $filename,
                     'image_path' => $file,
                     'image_disk' => 'public',
                     'label' => $label,

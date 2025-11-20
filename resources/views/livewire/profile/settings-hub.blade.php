@@ -411,7 +411,16 @@
                     <button type="button" class="rounded-full bg-[#F2FFFA] px-4 py-1 text-sm font-semibold text-[#08745C]" wire:click="closeIconPicker">Close</button>
                 </div>
                 <div class="flex flex-1 flex-col gap-4 overflow-hidden px-6 py-4">
-                    <input type="text" wire:model.live="iconPickerSearch" placeholder="Search icons..." class="w-full rounded-2xl border border-[#D2F9E7] px-4 py-2 text-sm" />
+                    <div class="flex items-center gap-2">
+                        <input type="text" wire:model.live="iconPickerSearch" placeholder="Search icons..." class="w-full rounded-2xl border border-[#D2F9E7] px-4 py-2 text-sm" />
+                        @if($iconPickerTab === 'fontawesome')
+                            <select wire:model.live="perPage" class="rounded-2xl border border-[#D2F9E7] px-3 py-2 text-sm">
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        @endif
+                    </div>
                     <div class="flex flex-wrap gap-2">
                         <button type="button" wire:click="$set('iconPickerTab','fontawesome')" @class([
                             'rounded-full px-4 py-2 text-sm font-semibold transition',
@@ -447,6 +456,11 @@
                                 <p class="text-sm text-slate-400 sm:col-span-3">{{ __('No icons found') }}</p>
                             @endforelse
                         </div>
+                        @if($iconPickerTab === 'fontawesome')
+                            <div class="mt-4">
+                                {{ $pickerIcons->links() }}
+                            </div>
+                        @endif
                     </div>
                     <div class="grid gap-3 md:grid-cols-2">
                         <div>

@@ -17,10 +17,13 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 class SettingsHub extends Component
 {
+    use WithPagination;
+
     public array $profileForm = [];
     public array $passwordForm = [
         'current_password' => '',
@@ -52,6 +55,7 @@ class SettingsHub extends Component
     public string $iconPickerSearch = '';
     public string $iconPickerIconColor = '#095C4A';
     public string $iconPickerBackgroundColor = '#D2F9E7';
+    public int $perPage = 50;
 
     public array $categoryForm = [
         'name' => '',
@@ -424,20 +428,29 @@ class SettingsHub extends Component
         };
     }
 
+    public function updatingIconPickerSearch(): void
+    {
+        $this->resetPage();
+    }
+
     public function render(): View
     {
         $iconQuery = Icon::query()
             ->where('is_active', true)
             ->when($this->iconPickerSearch, function ($query) {
-                $query->where(function ($sub) {
-                    $sub->where('label', 'like', '%'.$this->iconPickerSearch.'%')
-                        ->orWhere('fa_class', 'like', '%'.$this->iconPickerSearch.'%');
+                $searchTerm = $this->iconPickerSearch;
+                $searchLabel = str_replace('-', ' ', $searchTerm);
+
+                $query->where(function ($sub) use ($searchTerm, $searchLabel) {
+                    $sub->where('label', 'like', '%'.$searchTerm.'%')
+                        ->orWhere('label', 'like', '%'.$searchLabel.'%')
+                        ->orWhere('fa_class', 'like', '%'.$searchTerm.'%');
                 });
             })
             ->orderBy('label');
 
         $fontawesomeIcons = $this->iconPickerOpen
-            ? (clone $iconQuery)->where('type', 'fontawesome')->get()
+            ? (clone $iconQuery)->where('type', 'fontawesome')->paginate($this->perPage)
             : collect();
 
         $customIcons = $this->iconPickerOpen
