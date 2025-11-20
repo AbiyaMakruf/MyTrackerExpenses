@@ -333,7 +333,7 @@
                                 @if ($item->icon)
                                     <div class="flex h-6 w-6 items-center justify-center rounded-full bg-[#F6FFFA] text-[#095C4A]">
                                         @if ($item->icon->type === 'image')
-                                            <img src="{{ asset('storage/' . $item->icon->image_path) }}" class="h-3 w-3 object-contain" />
+                                            <img src="{{ $item->icon->image_url }}" class="h-3 w-3 object-contain" />
                                         @else
                                             <span data-fa-icon="{{ $item->icon->fa_class }}" class="text-xs"></span>
                                         @endif
@@ -357,7 +357,7 @@
                                 @if ($item->icon)
                                     <div class="flex h-6 w-6 items-center justify-center rounded-full bg-[#F6FFFA] text-[#095C4A]">
                                         @if ($item->icon->type === 'image')
-                                            <img src="{{ asset('storage/' . $item->icon->image_path) }}" class="h-3 w-3 object-contain" />
+                                            <img src="{{ $item->icon->image_url }}" class="h-3 w-3 object-contain" />
                                         @else
                                             <span data-fa-icon="{{ $item->icon->fa_class }}" class="text-xs"></span>
                                         @endif
@@ -395,7 +395,7 @@
                 @endphp
                 <a href="{{ route('transactions.show', $transaction) }}" class="flex items-center gap-4 rounded-2xl border border-[#E2F5ED] bg-white px-3 py-3 shadow-sm transition-all duration-200 ease-out hover:scale-[1.01]">
                     <div class="flex h-12 w-12 items-center justify-center rounded-2xl" style="background-color: {{ $iconBg }}; color: {{ $iconColor }}">
-                        @if ($iconDef && $iconDef->type === 'image' && $iconDef->image_url)
+                        @if ($iconDef && $iconDef->image_url)
                             <img src="{{ $iconDef->image_url }}" alt="{{ $iconDef->label }}" class="h-8 w-8 object-contain">
                         @elseif ($iconDef && $iconDef->fa_class)
                             <span data-fa-icon="{{ $iconDef->fa_class }}" class="text-lg"></span>
@@ -438,7 +438,7 @@
                         @if ($subscription->icon)
                             <div class="flex h-8 w-8 items-center justify-center rounded-full bg-[#F6FFFA] text-[#095C4A]">
                                 @if ($subscription->icon->type === 'image')
-                                    <img src="{{ asset('storage/' . $subscription->icon->image_path) }}" class="h-4 w-4 object-contain" />
+                                    <img src="{{ $subscription->icon->image_url }}" class="h-4 w-4 object-contain" />
                                 @else
                                     <span data-fa-icon="{{ $subscription->icon->fa_class }}"></span>
                                 @endif

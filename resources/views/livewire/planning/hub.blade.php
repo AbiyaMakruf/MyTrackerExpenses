@@ -38,9 +38,9 @@
                                 <div class="flex items-center gap-3">
                                     <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[#F6FFFA] text-[#095C4A]">
                                         @if ($payment->icon)
-                                            @if ($payment->icon->type === 'image')
-                                                <img src="{{ asset('storage/' . $payment->icon->image_path) }}" class="h-5 w-5 object-contain" />
-                                            @else
+                                            @if ($payment->icon->image_url)
+                                                <img src="{{ $payment->icon->image_url }}" class="h-5 w-5 object-contain" />
+                                            @elseif ($payment->icon->fa_class)
                                                 <span data-fa-icon="{{ $payment->icon->fa_class }}"></span>
                                             @endif
                                         @else
@@ -158,9 +158,9 @@
                                 <div class="flex items-center gap-3">
                                     <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[#F6FFFA] text-[#095C4A]">
                                         @if ($budget->icon)
-                                            @if ($budget->icon->type === 'image')
-                                                <img src="{{ asset('storage/' . $budget->icon->image_path) }}" class="h-5 w-5 object-contain" />
-                                            @else
+                                            @if ($budget->icon->image_url)
+                                                <img src="{{ $budget->icon->image_url }}" class="h-5 w-5 object-contain" />
+                                            @elseif ($budget->icon->fa_class)
                                                 <span data-fa-icon="{{ $budget->icon->fa_class }}"></span>
                                             @endif
                                         @else
@@ -286,9 +286,9 @@
                                     <div class="flex items-center gap-3">
                                         <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[#F6FFFA] text-[#095C4A]">
                                             @if ($goal->icon)
-                                                @if ($goal->icon->type === 'image')
-                                                    <img src="{{ asset('storage/' . $goal->icon->image_path) }}" class="h-5 w-5 object-contain" />
-                                                @else
+                                                @if ($goal->icon->image_url)
+                                                    <img src="{{ $goal->icon->image_url }}" class="h-5 w-5 object-contain" />
+                                                @elseif ($goal->icon->fa_class)
                                                     <span data-fa-icon="{{ $goal->icon->fa_class }}"></span>
                                                 @endif
                                             @else
@@ -403,9 +403,9 @@
                                 <div class="flex items-center gap-3">
                                     <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[#F6FFFA] text-[#095C4A]">
                                         @if ($subscription->icon)
-                                            @if ($subscription->icon->type === 'image')
-                                                <img src="{{ asset('storage/' . $subscription->icon->image_path) }}" class="h-5 w-5 object-contain" />
-                                            @else
+                                            @if ($subscription->icon->image_url)
+                                                <img src="{{ $subscription->icon->image_url }}" class="h-5 w-5 object-contain" />
+                                            @elseif ($subscription->icon->fa_class)
                                                 <span data-fa-icon="{{ $subscription->icon->fa_class }}"></span>
                                             @endif
                                         @else

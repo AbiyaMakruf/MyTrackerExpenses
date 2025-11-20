@@ -66,9 +66,16 @@ const renderFontAwesome = () => {
             return;
         }
 
-        const [rawPrefix, rawName] = value.includes(':') ? value.split(':') : value.split('-');
-        const prefix = rawPrefix && rawPrefix.length ? rawPrefix : 'fas';
-        const iconName = (rawName || '').trim();
+        let prefix = 'fas';
+        let iconName = value;
+
+        if (value.includes(':')) {
+            const parts = value.split(':');
+            prefix = parts[0];
+            iconName = parts[1];
+        }
+
+        iconName = (iconName || '').trim();
 
         if (!iconName) {
             return;
@@ -77,6 +84,25 @@ const renderFontAwesome = () => {
         try {
             const definition = findIconDefinition({ prefix, iconName });
             if (!definition) {
+                // Try finding in other styles if default fails
+                const altPrefixes = ['fas', 'far', 'fab'].filter(p => p !== prefix);
+                let altDefinition = null;
+                
+                for (const p of altPrefixes) {
+                    altDefinition = findIconDefinition({ prefix: p, iconName });
+                    if (altDefinition) break;
+                }
+                
+                if (!altDefinition) return;
+                
+                const rendered = icon(altDefinition, {
+                    classes: (el.dataset.faClasses || '').split(' ').filter(Boolean),
+                });
+
+                if (rendered && rendered.node[0]) {
+                    el.innerHTML = '';
+                    el.appendChild(rendered.node[0]);
+                }
                 return;
             }
 
