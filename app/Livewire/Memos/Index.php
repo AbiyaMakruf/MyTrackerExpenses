@@ -372,7 +372,9 @@ class Index extends Component
         if ($this->currentFolderId) {
             $groups = MemoGroup::where('user_id', Auth::id())
                 ->where('memo_folder_id', $this->currentFolderId)
-                ->with('entries')
+                ->with(['entries' => function ($query) {
+                    $query->orderBy('created_at', 'asc');
+                }])
                 ->latest()
                 ->get();
             $currentFolder = MemoFolder::find($this->currentFolderId);
@@ -380,7 +382,9 @@ class Index extends Component
             $folders = $allFolders;
             $groups = MemoGroup::where('user_id', Auth::id())
                 ->whereNull('memo_folder_id')
-                ->with('entries')
+                ->with(['entries' => function ($query) {
+                    $query->orderBy('created_at', 'asc');
+                }])
                 ->latest()
                 ->get();
         }
