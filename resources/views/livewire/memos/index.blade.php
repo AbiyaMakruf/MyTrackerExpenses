@@ -1,4 +1,4 @@
-<section class="space-y-6" x-data="{ showImage: false, imageUrl: '' }">
+<section x-data="{ showImage: false, imageUrl: '' }">
     <!-- Lightbox -->
     <div x-show="showImage" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" x-cloak x-transition>
         <div @click.away="showImage = false" class="relative max-h-full max-w-full">
@@ -11,13 +11,14 @@
         </div>
     </div>
 
-    <!-- Header & Navigation -->
-    <div class="flex flex-col gap-2">
-        <div class="flex items-center gap-2">
-            @if ($currentFolder)
-                <button wire:click="exitFolder" class="group flex items-center gap-1 rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 transition-transform group-hover:-translate-x-1">
-                        <path fill-rule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clip-rule="evenodd" />
+    <div class="space-y-6">
+        <!-- Header & Navigation -->
+        <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2">
+                @if ($currentFolder)
+                    <button wire:click="exitFolder" class="group flex items-center gap-1 rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5 transition-transform group-hover:-translate-x-1">
+                            <path fill-rule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clip-rule="evenodd" />
                     </svg>
                     <span class="text-sm font-medium">Back</span>
                 </button>
@@ -26,22 +27,22 @@
                 <h1 class="text-2xl font-semibold text-[#095C4A]">Memos</h1>
             @endif
         </div>
-        <p class="text-sm text-slate-500">Keep track of your maintenance logs and todos.</p>
-    </div>
+            <p class="text-sm text-slate-500">Keep track of your maintenance logs and todos.</p>
+        </div>
 
-    <!-- Actions (Add Folder / Add List) -->
-    <div class="flex flex-wrap gap-4">
-        <!-- Add List Button -->
-        <button wire:click="$set('showCreateGroupModal', true)" class="glass-card flex flex-1 min-w-[150px] items-center justify-center gap-2 p-4 text-[#095C4A] hover:bg-slate-50 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6">
-                <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-            </svg>
-            <span class="font-semibold">Add List</span>
-        </button>
+        <!-- Actions (Add Folder / Add List) -->
+        <div class="flex flex-wrap gap-4">
+            <!-- Add List Button -->
+            <button wire:click="$set('showCreateGroupModal', true)" class="glass-card flex flex-1 min-w-[150px] items-center justify-center gap-2 p-4 text-[#095C4A] hover:bg-slate-50 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6">
+                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                </svg>
+                <span class="font-semibold">Add List</span>
+            </button>
 
-        <!-- Add Folder Button (Only at root) -->
-        @if (!$currentFolder)
-            <button wire:click="$set('showCreateFolderModal', true)" class="glass-card flex flex-1 min-w-[150px] items-center justify-center gap-2 p-4 text-[#095C4A] hover:bg-slate-50 transition-colors">
+            <!-- Add Folder Button (Only at root) -->
+            @if (!$currentFolder)
+                <button wire:click="$set('showCreateFolderModal', true)" class="glass-card flex flex-1 min-w-[150px] items-center justify-center gap-2 p-4 text-[#095C4A] hover:bg-slate-50 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6">
                     <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
                     <path stroke="#095C4A" stroke-linecap="round" stroke-linejoin="round" d="M12 10v4m-2-2h4" />
@@ -84,12 +85,12 @@
                 </div>
             @endforeach
         </div>
-    @endif
+        @endif
 
-    <!-- Lists Grid -->
-    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        @foreach ($groups as $group)
-            <div class="glass-card flex flex-col gap-4">
+        <!-- Lists Grid -->
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            @foreach ($groups as $group)
+                <div class="glass-card flex flex-col gap-4">
                 <!-- List Header -->
                 <div class="flex items-center justify-between border-b border-[#F1F5F9] pb-2">
                     @if ($editingGroupId === $group->id)
@@ -211,6 +212,9 @@
             </div>
         @endforeach
     </div>
+
+    </div>
+
     <!-- Create Folder Modal -->
     <div x-data="{ open: @entangle('showCreateFolderModal') }"
          x-show="open"
