@@ -222,9 +222,12 @@
                     <h2 class="text-lg font-bold text-slate-900">Create Folder</h2>
                 </div>
                 <div class="space-y-4">
-                    <flux:input wire:model="newFolderName" label="Folder Name" />
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Color</label>
+                        <label class="block text-sm font-medium text-slate-700">Folder Name</label>
+                        <input type="text" wire:model="newFolderName" class="mt-1 block w-full border border-gray-300 text-slate-900 shadow-sm focus:border-[#095C4A] focus:ring-[#095C4A] sm:text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700">Color</label>
                         <div class="mt-2 flex flex-wrap gap-2">
                             @foreach(['#EF4444', '#F97316', '#F59E0B', '#84CC16', '#10B981', '#06B6D4', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899'] as $color)
                                 <button type="button" wire:click="$set('newFolderColor', '{{ $color }}')"
@@ -235,8 +238,8 @@
                     </div>
                 </div>
                 <div class="flex justify-end gap-2">
-                    <flux:button wire:click="$set('showCreateFolderModal', false)">Cancel</flux:button>
-                    <flux:button variant="primary" wire:click="saveFolder">Create</flux:button>
+                    <button wire:click="$set('showCreateFolderModal', false)" class="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600">Cancel</button>
+                    <button wire:click="saveFolder" class="rounded-lg px-4 py-2 text-sm font-semibold text-[#095C4A] hover:bg-[#064034] hover:text-white transition-colors">Create</button>
                 </div>
             </div>
         </div>
@@ -259,11 +262,14 @@
                     <h2 class="text-lg font-bold text-slate-900">Create List</h2>
                 </div>
                 <div class="space-y-4">
-                    <flux:input wire:model="newGroupName" label="List Name" />
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700">List Name</label>
+                        <input type="text" wire:model="newGroupName" class="mt-1 block w-full border border-gray-300 text-slate-900 shadow-sm focus:border-[#095C4A] focus:ring-[#095C4A] sm:text-sm">
+                    </div>
                 </div>
                 <div class="flex justify-end gap-2">
-                    <flux:button wire:click="$set('showCreateGroupModal', false)">Cancel</flux:button>
-                    <flux:button variant="primary" wire:click="saveGroup">Create</flux:button>
+                    <button wire:click="$set('showCreateGroupModal', false)" class="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600">Cancel</button>
+                    <button wire:click="saveGroup" class="rounded-lg px-4 py-2 text-sm font-semibold text-[#095C4A] hover:bg-[#064034] hover:text-white transition-colors">Create</button>
                 </div>
             </div>
         </div>
@@ -286,9 +292,12 @@
                     <h2 class="text-lg font-bold text-slate-900">Edit Folder</h2>
                 </div>
                 <div class="space-y-4">
-                    <flux:input wire:model="editingFolderName" label="Folder Name" />
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Color</label>
+                        <label class="block text-sm font-medium text-slate-700">Folder Name</label>
+                        <input type="text" wire:model="editingFolderName" class="mt-1 block w-full border border-gray-300 text-slate-900 shadow-sm focus:border-[#095C4A] focus:ring-[#095C4A] sm:text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700">Color</label>
                         <div class="mt-2 flex flex-wrap gap-2">
                             @foreach(['#EF4444', '#F97316', '#F59E0B', '#84CC16', '#10B981', '#06B6D4', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899'] as $color)
                                 <button type="button" wire:click="$set('editingFolderColor', '{{ $color }}')"
@@ -299,8 +308,8 @@
                     </div>
                 </div>
                 <div class="flex justify-end gap-2">
-                    <flux:button wire:click="cancelEditFolder">Cancel</flux:button>
-                    <flux:button variant="primary" wire:click="updateFolder">Save</flux:button>
+                    <button wire:click="cancelEditFolder" class="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600">Cancel</button>
+                    <button wire:click="updateFolder" class="rounded-lg px-4 py-2 text-sm font-semibold text-[#095C4A] hover:bg-[#064034] hover:text-white transition-colors">Save</button>
                 </div>
             </div>
         </div>
@@ -323,16 +332,17 @@
                     <h2 class="text-lg font-bold text-slate-900">Move List</h2>
                 </div>
                 <div>
-                    <flux:select wire:model="targetFolderId" label="Select Folder">
+                    <label class="block text-sm font-medium text-slate-700">Select Folder</label>
+                    <select wire:model="targetFolderId" class="mt-1 block w-full border border-gray-300 text-slate-900 shadow-sm focus:border-[#095C4A] focus:ring-[#095C4A] sm:text-sm">
                         <option value="">Root (No Folder)</option>
                         @foreach($folders as $folder)
                             <option value="{{ $folder->id }}">{{ $folder->name }}</option>
                         @endforeach
-                    </flux:select>
+                    </select>
                 </div>
                 <div class="flex justify-end gap-2">
-                    <flux:button wire:click="cancelMoveGroup">Cancel</flux:button>
-                    <flux:button variant="primary" wire:click="moveGroup">Move</flux:button>
+                    <button wire:click="cancelMoveGroup" class="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600">Cancel</button>
+                    <button wire:click="moveGroup" class="rounded-lg px-4 py-2 text-sm font-semibold text-[#095C4A] hover:bg-[#064034] hover:text-white transition-colors">Move</button>
                 </div>
             </div>
         </div>
