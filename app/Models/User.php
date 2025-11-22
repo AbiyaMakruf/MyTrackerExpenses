@@ -28,6 +28,7 @@ class User extends Authenticatable
         'language',
         'timezone',
         'default_wallet_id',
+        'profile_photo_path',
     ];
 
     /**

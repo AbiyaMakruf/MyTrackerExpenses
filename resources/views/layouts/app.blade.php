@@ -46,6 +46,7 @@
                             <flux:profile
                                 :name="auth()->user()->name"
                                 :initials="auth()->user()->initials()"
+                                :avatar="auth()->user()->profile_photo_path"
                                 variant="outline"
                                 size="sm"
                             />

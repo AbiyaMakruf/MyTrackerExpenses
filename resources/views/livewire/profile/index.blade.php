@@ -15,6 +15,29 @@
     <div class="grid gap-4 md:grid-cols-2">
         <form wire:submit.prevent="saveProfile" class="space-y-3 rounded-2xl border border-[#72E3BD]/60 bg-white/90 p-4">
             <h2 class="text-lg font-semibold text-[#095C4A]">Profile details</h2>
+            
+            <div class="flex items-center gap-4 py-2">
+                <div class="relative h-16 w-16 overflow-hidden rounded-full border border-slate-200">
+                    @if ($photo)
+                        <img src="{{ $photo->temporaryUrl() }}" class="h-full w-full object-cover" />
+                    @elseif (auth()->user()->profile_photo_path)
+                        <img src="{{ auth()->user()->profile_photo_path }}" class="h-full w-full object-cover" />
+                    @else
+                        <div class="flex h-full w-full items-center justify-center bg-[#D2F9E7] text-xl font-bold text-[#095C4A]">
+                            {{ auth()->user()->initials() }}
+                        </div>
+                    @endif
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label for="photo" class="cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 shadow-sm">
+                        Change Photo
+                    </label>
+                    <input type="file" id="photo" wire:model="photo" class="hidden" accept="image/*" />
+                    <div wire:loading wire:target="photo" class="text-xs text-slate-500">Uploading...</div>
+                    @error('photo') <p class="text-xs text-red-500">{{ $message }}</p> @enderror
+                </div>
+            </div>
+
             <div>
                 <label class="text-xs text-slate-500">Name</label>
                 <input type="text" wire:model.live="profileForm.name" class="w-full rounded-2xl border border-[#D2F9E7] px-3 py-2" />
