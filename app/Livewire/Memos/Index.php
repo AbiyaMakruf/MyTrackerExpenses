@@ -339,9 +339,19 @@ class Index extends Component
     public function moveGroup()
     {
         $group = MemoGroup::where('user_id', Auth::id())->find($this->movingGroupId);
+        
         if ($group) {
-            $group->update(['memo_folder_id' => $this->targetFolderId]);
+            $targetId = $this->targetFolderId;
+            
+            // Convert empty values to null
+            if (empty($targetId)) {
+                $targetId = null;
+            }
+            
+            $group->memo_folder_id = $targetId;
+            $group->save();
         }
+        
         $this->movingGroupId = null;
         $this->targetFolderId = null;
     }

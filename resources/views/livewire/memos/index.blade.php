@@ -114,20 +114,21 @@
                         <li class="group relative flex gap-2 text-sm">
                             @if ($editingEntryId === $entry->id)
                                 <!-- Edit Form -->
-                                <div class="w-full space-y-2 rounded-xl bg-slate-50 p-2">
+                                <div class="w-full space-y-2 rounded-xl bg-slate-50 p-2" wire:key="edit-entry-{{ $entry->id }}">
                                     <input type="text" wire:model="editingEntryDate" placeholder="Date/Label" class="w-full rounded-lg border border-slate-200 px-2 py-1 text-xs" />
                                     <textarea wire:model="editingEntryContent" rows="2" class="w-full rounded-lg border border-slate-200 px-2 py-1 text-xs"></textarea>
                                     
                                     <div class="flex items-center gap-2">
-                                        <input type="file" wire:model="editingEntryFile" class="w-full text-xs text-slate-500 file:mr-2 file:rounded-full file:border-0 file:bg-[#D2F9E7] file:px-2 file:py-1 file:text-xs file:font-semibold file:text-[#08745C] hover:file:bg-[#bbf7d0]" />
+                                        <input type="file" wire:model="editingEntryFile" wire:key="edit-file-{{ $entry->id }}" class="w-full text-xs text-slate-500 file:mr-2 file:rounded-full file:border-0 file:bg-[#D2F9E7] file:px-2 file:py-1 file:text-xs file:font-semibold file:text-[#08745C] hover:file:bg-[#bbf7d0]" />
+                                        <div wire:loading wire:target="editingEntryFile" class="text-xs text-slate-500">Uploading...</div>
                                         @if ($editingEntryFile)
-                                            <span class="text-xs text-green-600">New file selected</span>
+                                            <span class="text-xs text-green-600" wire:loading.remove wire:target="editingEntryFile">New file uploaded</span>
                                         @endif
                                     </div>
 
                                     <div class="flex justify-end gap-2">
                                         <button wire:click="cancelEditEntry" class="text-xs text-slate-500">Cancel</button>
-                                        <button wire:click="updateEntry" class="text-xs font-semibold text-[#08745C]">Save</button>
+                                        <button wire:click="updateEntry" wire:loading.attr="disabled" wire:target="editingEntryFile, updateEntry" class="text-xs font-semibold text-[#08745C] disabled:opacity-50">Save</button>
                                     </div>
                                 </div>
                             @else
@@ -181,17 +182,22 @@
                 </ul>
 
                 @if ($newEntryGroupId === $group->id)
-                    <div class="mt-2 space-y-2 rounded-xl bg-slate-50 p-2">
+                    <div class="mt-2 space-y-2 rounded-xl bg-slate-50 p-2" wire:key="add-entry-{{ $group->id }}">
                         <input type="text" wire:model="newEntryDate" placeholder="Date/Label (e.g. 15 Nov)" class="w-full rounded-lg border border-slate-200 px-2 py-1 text-xs" />
                         <textarea wire:model="newEntryContent" rows="2" placeholder="Note content..." class="w-full rounded-lg border border-slate-200 px-2 py-1 text-xs"></textarea>
+                        @error('newEntryContent') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                         
                         <div class="flex items-center gap-2">
-                            <input type="file" wire:model="newEntryImage" class="w-full text-xs text-slate-500 file:mr-2 file:rounded-full file:border-0 file:bg-[#D2F9E7] file:px-2 file:py-1 file:text-xs file:font-semibold file:text-[#08745C] hover:file:bg-[#bbf7d0]" />
+                            <input type="file" wire:model="newEntryFile" wire:key="file-input-{{ $group->id }}" class="w-full text-xs text-slate-500 file:mr-2 file:rounded-full file:border-0 file:bg-[#D2F9E7] file:px-2 file:py-1 file:text-xs file:font-semibold file:text-[#08745C] hover:file:bg-[#bbf7d0]" />
+                            <div wire:loading wire:target="newEntryFile" class="text-xs text-slate-500">Uploading...</div>
+                            @if ($newEntryFile)
+                                <span class="text-xs text-green-600" wire:loading.remove wire:target="newEntryFile">File uploaded</span>
+                            @endif
                         </div>
 
                         <div class="flex justify-end gap-2">
                             <button wire:click="cancelAddEntry" class="text-xs text-slate-500">Cancel</button>
-                            <button wire:click="saveEntry" class="text-xs font-semibold text-[#08745C]">Add</button>
+                            <button wire:click="saveEntry" wire:loading.attr="disabled" wire:target="newEntryFile, saveEntry" class="text-xs font-semibold text-[#08745C] disabled:opacity-50">Add</button>
                         </div>
                     </div>
                 @else
