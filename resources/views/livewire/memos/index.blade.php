@@ -144,7 +144,7 @@
                                         <div class="mt-2">
                                             @if ($entry->is_image)
                                                 <img src="{{ $entry->file_path }}" 
-                                                     class="h-16 w-16 cursor-pointer rounded-lg object-cover shadow-sm hover:opacity-80 transition-opacity" 
+                                                     class="h-16 w-16 cursor-pointer rounded-lg object-contain bg-slate-100 shadow-sm hover:opacity-80 transition-opacity" 
                                                      @click="showImage = true; imageUrl = '{{ $entry->file_path }}'" />
                                             @else
                                                 <a href="{{ $entry->file_path }}" target="_blank" class="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-600 hover:bg-slate-100">
