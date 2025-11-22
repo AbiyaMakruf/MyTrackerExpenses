@@ -341,7 +341,7 @@
                     <label class="block text-sm font-medium text-slate-700">Select Folder</label>
                     <select wire:model="targetFolderId" class="mt-1 block w-full border border-gray-300 text-slate-900 shadow-sm focus:border-[#095C4A] focus:ring-[#095C4A] sm:text-sm">
                         <option value="">Root (No Folder)</option>
-                        @foreach($folders as $folder)
+                        @foreach($allFolders as $folder)
                             <option value="{{ $folder->id }}">{{ $folder->name }}</option>
                         @endforeach
                     </select>

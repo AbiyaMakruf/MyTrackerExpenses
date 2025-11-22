@@ -365,6 +365,7 @@ class Index extends Component
     public function render()
     {
         $folders = [];
+        $allFolders = MemoFolder::where('user_id', Auth::id())->latest()->get();
         $groups = [];
         $currentFolder = null;
 
@@ -376,7 +377,7 @@ class Index extends Component
                 ->get();
             $currentFolder = MemoFolder::find($this->currentFolderId);
         } else {
-            $folders = MemoFolder::where('user_id', Auth::id())->latest()->get();
+            $folders = $allFolders;
             $groups = MemoGroup::where('user_id', Auth::id())
                 ->whereNull('memo_folder_id')
                 ->with('entries')
@@ -386,6 +387,7 @@ class Index extends Component
 
         return view('livewire.memos.index', [
             'folders' => $folders,
+            'allFolders' => $allFolders,
             'groups' => $groups,
             'currentFolder' => $currentFolder,
         ]);
