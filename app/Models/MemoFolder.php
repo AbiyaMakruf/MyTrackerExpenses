@@ -5,20 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class MemoEntry extends Model
+class MemoFolder extends Model
 {
     use HasFactory;
 
     protected $guarded = [];
 
-    public function group(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(MemoGroup::class, 'memo_group_id');
+        return $this->belongsTo(User::class);
     }
 
-    public function getIsImageAttribute(): bool
+    public function groups(): HasMany
     {
-        return str_starts_with($this->mime_type, 'image/');
+        return $this->hasMany(MemoGroup::class);
     }
 }

@@ -7,6 +7,7 @@ use App\Models\Icon;
 use App\Models\Label;
 use App\Models\Transaction;
 use App\Models\Wallet;
+use App\Services\TransactionSummary;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
@@ -332,10 +333,13 @@ class Index extends Component
         $filename = 'transactions-' . now()->format('YmdHis') . '.' . $format;
 
         if ($format === 'pdf') {
+            $summary = TransactionSummary::build($transactions);
+
             $pdf = Pdf::loadView('exports.transactions-pdf', [
                 'transactions' => $transactions,
                 'start' => $start,
                 'end' => $end,
+                'summary' => $summary,
             ]);
             
             return response()->streamDownload(function () use ($pdf) {

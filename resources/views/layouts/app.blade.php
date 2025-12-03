@@ -46,6 +46,7 @@
                             <flux:profile
                                 :name="auth()->user()->name"
                                 :initials="auth()->user()->initials()"
+                                :avatar="auth()->user()->profile_photo_path"
                                 variant="outline"
                                 size="sm"
                             />
@@ -70,8 +71,8 @@
                 {{ $slot }}
             </main>
 
-            <nav class="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200 bg-white pb-safe pt-2 dark:border-slate-700 dark:bg-slate-900 md:hidden">
-                <div class="mx-auto grid w-full max-w-md grid-cols-5 items-center justify-items-center px-4 text-[10px] font-medium">
+            <nav class="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200 bg-white pb-safe pt-2 md:hidden">
+                <div class="mx-auto grid w-full max-w-md grid-cols-5 items-center justify-items-center px-4 text-[10px] font-medium pb-4">
                     @php($navItems = [
                         ['route' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home'],
                         ['route' => 'planning', 'label' => 'Planning', 'icon' => 'calendar-days'],

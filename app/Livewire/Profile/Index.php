@@ -8,10 +8,16 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithFileUploads;
+use App\Services\GoogleCloudStorage;
+use Illuminate\Support\Str;
 
 #[Layout('layouts.app')]
 class Index extends Component
 {
+    use WithFileUploads;
+
+    public $photo;
     public array $profileForm = [];
     public array $passwordForm = [
         'current_password' => '',
@@ -31,18 +37,32 @@ class Index extends Component
         ];
     }
 
-    public function saveProfile(): void
+    public function saveProfile(GoogleCloudStorage $gcs): void
     {
         $user = Auth::user();
-        $data = $this->validate([
+        $this->validate([
+            'photo' => ['nullable', 'image', 'max:1024'],
             'profileForm.name' => ['required', 'string', 'max:255'],
             'profileForm.email' => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
             'profileForm.base_currency' => ['required', Rule::in(config('myexpenses.currency.supported'))],
             'profileForm.language' => ['required', 'string'],
             'profileForm.timezone' => ['required', 'string'],
-        ])['profileForm'];
+        ]);
 
-        $user->update($data);
+        if ($this->photo) {
+            $storedName = Str::random(40) . '.' . $this->photo->getClientOriginalExtension();
+            
+            if (app()->environment('local')) {
+                $path = $this->photo->storeAs('profile-photos', $storedName, 'public');
+                $user->profile_photo_path = asset('storage/' . $path);
+            } else {
+                $user->profile_photo_path = $gcs->upload($this->photo, 'profile-photos/' . $storedName);
+            }
+        }
+
+        $user->update($this->profileForm);
+        $user->save(); // Ensure profile_photo_path is saved if it was set directly
+
         session()->flash('profile_status', 'Profile updated');
     }
 

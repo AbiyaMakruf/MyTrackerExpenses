@@ -18,6 +18,11 @@ class MemoGroup extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function folder(): BelongsTo
+    {
+        return $this->belongsTo(MemoFolder::class, 'memo_folder_id');
+    }
+
     public function entries(): HasMany
     {
         return $this->hasMany(MemoEntry::class);
