@@ -10,7 +10,7 @@ use App\Livewire\Transactions\Index as TransactionsIndex;
 use App\Livewire\Transactions\Show as TransactionShow;
 use Illuminate\Support\Facades\Route;
 
-Route::redirect('/', '/login');
+Route::view('/', 'welcome')->name('welcome');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardOverview::class)->name('dashboard');
